@@ -1,0 +1,60 @@
+{
+    "csv_file": null,
+    "csv_format": "PEAKFIT",
+    "mla_type": "HEXAGONAL",
+    "mla_lens_pitch": 2390.0,
+    "mla_optic_size": 10000.0,
+    "mla_centre": [
+        0.0,
+        0.0
+    ],
+    "mla_rotation": 30.8,
+    "mla_offset": [
+        0.0,
+        0.0
+    ],
+    "focal_length_mla": 175.0,
+    "focal_length_obj_lens": 3.3333333333333335,
+    "focal_length_fourier_lens": 175.0,
+    "focal_length_tube_lens": 200.0,
+    "num_aperture": 1.27,
+    "ref_idx_immersion": 1.33,
+    "ref_idx_medium": 1.33,
+    "pixel_size_camera": 16.0,
+    "fit_params_aberration": {
+        "frame_min": -1,
+        "frame_max": 1000,
+        "disparity_max": 5.0,
+        "disparity_step": 0.1,
+        "dist_search": 0.5,
+        "angle_tolerance": 2.0,
+        "threshold": 1.0,
+        "min_views": 3,
+        "z_calib": null
+    },
+    "aberration_params": {
+        "axial_window": 1,
+        "photon_threshold": 1,
+        "min_views": 3
+    },
+    "fit_params_full": {
+        "frame_min": -1,
+        "frame_max": -1,
+        "disparity_max": 8.0,
+        "disparity_step": 0.1,
+        "dist_search": 0.5,
+        "angle_tolerance": 1.0,
+        "threshold": 0.3,
+        "min_views": 2,
+        "z_calib": 1.534
+    },
+    "save_dir": ".",
+    "show_graphs": true,
+    "show_result_graphs": true,
+    "show_mla_alignment_graph": true,
+    "show_all_debug_graphs": false,
+    "show_max_lateral_err": 200.0,
+    "show_min_view_count": 3,
+    "confirm_mla_alignment": true,
+    "log_timing": true
+}
