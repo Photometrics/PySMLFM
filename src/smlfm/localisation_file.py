@@ -80,7 +80,21 @@ class LocalisationFile:
             raise ValueError(f'Unsupported localisation file format with value'
                              f' {file_format}')
 
-        raw_data = np.genfromtxt(csv_file, delimiter=',', dtype=float)
+        csv_header_rows = 0
+        with open(csv_file, 'r') as f:
+            while True:
+                line = f.readline(16384)
+                if not line:
+                    break  # No data in file
+                if line[-1] != '\n':
+                    raise ValueError(f'Row {csv_header_rows + 1} either too'
+                                     f' long or new line character missing')
+                if line[0].isdigit():
+                    break  # First row with data
+                csv_header_rows += 1
+
+        raw_data = np.genfromtxt(csv_file, delimiter=',', dtype=float,
+                                 skip_header=csv_header_rows)
 
         data = np.empty((raw_data.shape[0], 8))
         data.fill(np.nan)
