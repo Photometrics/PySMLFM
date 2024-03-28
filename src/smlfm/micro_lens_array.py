@@ -57,9 +57,6 @@ class MicroLensArray:
 
         self.lens_centres = self._generate_lattice()
 
-    def __getattr__(self, name: str):
-        return self.__dict__[f"_{name}"]
-
     def _generate_lattice(self) -> npt.NDArray[float]:
         """Generate the X,Y lattice coordinates based on given pattern."""
 
@@ -99,6 +96,7 @@ class MicroLensArray:
             dxy (npt.NDArray[float]): A shift in X and Y directions
                 (in lattice spacing units).
         """
+
         self.lens_centres[:] += dxy
 
         # TODO: Should the MLA centre be moved as well?

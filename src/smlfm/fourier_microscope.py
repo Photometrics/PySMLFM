@@ -91,6 +91,3 @@ class FourierMicroscope:
         self.xy_to_uv_scale = self.rho_scaling
         self.mla_to_uv_scale = 2.0 / self.bfp_lens_count
         self.mla_to_xy_scale = self.mla_to_uv_scale / self.xy_to_uv_scale
-
-    def __getattr__(self, name: str):
-        return self.__dict__[f"_{name}"]

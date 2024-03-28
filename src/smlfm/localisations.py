@@ -66,9 +66,6 @@ class Localisations:
         self.filtered_locs_2d = None
         self.reset_filtered_locs()
 
-    def __getattr__(self, name: str):
-        return self.__dict__[f"_{name}"]
-
     def assign_to_lenses(self,
                          mla: MicroLensArray,
                          lfm: FourierMicroscope
