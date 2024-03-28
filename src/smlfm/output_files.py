@@ -16,17 +16,17 @@ class OutputFiles:
 
     def __init__(self, cfg: Config, folder: Path):
         self.cfg = cfg
-        if cfg.save_dir.is_absolute() and not folder.is_absolute():
-            self.folder = cfg.save_dir / folder
-        else:
+        if folder.is_absolute():
             self.folder = folder
+        else:
+            self.folder = cfg.save_dir / folder
 
     def mkdir(self, mode=0o777):
         # Like POSIX 'mkdir -p'
         self.folder.mkdir(mode=mode, parents=True, exist_ok=True)
 
     def save_config(self):
-        cfg_dump = self.cfg.to_json(indent=4)
+        cfg_dump = self.cfg.to_json()
         with open(self.folder / self.CONFIG_FILE_NAME, 'wt') as file:
             file.write(cfg_dump)
 
