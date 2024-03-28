@@ -1,6 +1,6 @@
 import warnings
 from enum import Enum, unique
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -31,10 +31,20 @@ class Localisations:
             * [11] alpha V (in normalised pupil coordinates)
             * [12] lens index (int)
 
-        filtered_locs_2d (npt.NDArray[float]):
-            A filtered localisations from `locs_2d` attribute.
         min_frame (int): The smallest frame number in the data.
         max_frame (int): The largest frame number in the data.
+        filtered_locs_2d (npt.NDArray[float] or None):
+            A filtered localisations from `locs_2d` attribute,
+            or None if not set via `init_alpha_uv()` function yet.
+        alpha_model (AlphaModel or None):
+            A model used for mapping,
+            or None if not set via `init_alpha_uv()` function yet.
+        corrected_locs_2d (npt.NDArray[float] or None):
+            A corrected localisations from `filtered_locs_2d` attribute,
+            or None if not set via `correct_xy()` function yet.
+        correction (npt.NDArray[float] or None):
+            An average fit error across all fitted points (in microns),
+            or None if not set via `correct_xy()` function yet.
     """
 
     @unique
@@ -60,10 +70,14 @@ class Localisations:
 
         self.locs_2d[:, 0] = locs_2d_csv[:, 0].copy()
         self.locs_2d[:, 3:10] = locs_2d_csv[:, 1:8].copy()
-        # The locs_2d columns 1, 2, 12 are initialized in init_uv()
-        # The locs_2d columns 10, 11 are initialized in set_alpha_uv()
+        # The locs_2d columns 1, 2, 12 are initialized in assign_to_lenses()
+        # The locs_2d columns 10, 11 remain zeroed
+        # The filtered_locs_2d columns 10, 11 are initialized in init_alpha_uv()
 
-        self.filtered_locs_2d = None
+        self.filtered_locs_2d: Union[npt.NDArray[float], None] = None
+        self.alpha_model: Union[Localisations.AlphaModel, None] = None
+        self.corrected_locs_2d: Union[npt.NDArray[float], None] = None
+        self.correction: Union[npt.NDArray[float], None] = None
         self.reset_filtered_locs()
 
     def assign_to_lenses(self,
@@ -100,7 +114,10 @@ class Localisations:
         self.filtered_locs_2d = self.filtered_locs_2d[~sel, :]
 
     def reset_filtered_locs(self) -> None:
-        self.filtered_locs_2d = self.locs_2d
+        self.filtered_locs_2d = self.locs_2d.copy()
+        self.alpha_model = None
+        self.corrected_locs_2d = None
+        self.correction = None
 
     def filter_rhos(self,
                     filter_range: Tuple[float, float]
@@ -121,21 +138,6 @@ class Localisations:
                        ) -> None:
         photons = self.filtered_locs_2d[:, 7]
         self._filter(filter_range, photons)
-
-    def correct_xy(self,
-                   correction: npt.NDArray[float]
-                   ) -> None:
-        # These variables are not modified, no need to copy the data
-        u = self.filtered_locs_2d[:, 1]
-        v = self.filtered_locs_2d[:, 2]
-        # Through these variables are modified the original data
-        x = self.filtered_locs_2d[:, 3]
-        y = self.filtered_locs_2d[:, 4]
-
-        for i in range(correction.shape[0]):
-            idx = np.logical_and(u == correction[i, 0], v == correction[i, 1])
-            x[idx] -= correction[i, 2]
-            y[idx] -= correction[i, 3]
 
     def init_alpha_uv(self,
                       model: AlphaModel,
@@ -176,6 +178,29 @@ class Localisations:
 
         self.filtered_locs_2d[:, 10] = alpha_u
         self.filtered_locs_2d[:, 11] = alpha_v
+        self.alpha_model = model
+
+    def reset_correction(self) -> None:
+        self.corrected_locs_2d = None
+        self.correction = None
+
+    def correct_xy(self,
+                   correction: npt.NDArray[float]
+                   ) -> None:
+        self.corrected_locs_2d = self.filtered_locs_2d.copy()
+        self.correction = correction.copy()
+
+        # These variables are not modified, no need to copy the data
+        u = self.corrected_locs_2d[:, 1]
+        v = self.corrected_locs_2d[:, 2]
+        # Through these variables are modified the original data
+        x = self.corrected_locs_2d[:, 3]
+        y = self.corrected_locs_2d[:, 4]
+
+        for i in range(correction.shape[0]):
+            idx = np.logical_and(u == correction[i, 0], v == correction[i, 1])
+            x[idx] -= correction[i, 2]
+            y[idx] -= correction[i, 3]
 
     @staticmethod
     def _phase_average_sphere(u: npt.NDArray[float],

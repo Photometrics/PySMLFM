@@ -140,8 +140,8 @@ def app():
     if cfg.show_graphs and cfg.show_mla_alignment_graph:
         fig = smlfm.graphs.draw_locs(
             plt.figure(),
-            xy=lfl.filtered_locs_2d[:, 3:5],
-            lens_idx=lfl.filtered_locs_2d[:, 12],
+            xy=lfl.locs_2d[:, 3:5],
+            lens_idx=lfl.locs_2d[:, 12],
             lens_centres=(mla.lens_centres - mla.centre) * lfm.mla_to_xy_scale,
             # U,V values are around MLA centre but that offset is not included
             mla_centre=np.array([0.0, 0.0]))
@@ -207,17 +207,18 @@ def app():
     # with np.printoptions(precision=6, suppress=True):
     #     print(f'{correction}')
 
+    lfl.reset_correction()
     lfl.correct_xy(correction)
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
-        fig = smlfm.graphs.draw_locs_normalised(
+        fig = smlfm.graphs.draw_locs(
             plt.figure(),
-            xy=lfl.filtered_locs_2d[:, 3:5] * lfm.xy_to_uv_scale,
-            uv=lfl.filtered_locs_2d[:, 1:3],
-            lens_idx=lfl.filtered_locs_2d[:, 12],
+            xy=lfl.corrected_locs_2d[:, 3:5],
+            lens_idx=lfl.corrected_locs_2d[:, 12],
+            lens_centres=(mla.lens_centres - mla.centre) * lfm.mla_to_xy_scale,
             # U,V values are around MLA centre but that offset is not included
             mla_centre=np.array([0.0, 0.0]))
-        fig.canvas.manager.set_window_title('Normalised localisations with lens centers')
+        fig.canvas.manager.set_window_title('Corrected localisations')
 
     if cfg.log_timing:
         print(f'Aberration correction took {1e3 * (time.time() - tic):.3f} ms')
@@ -234,7 +235,7 @@ def app():
 
     print('Fitting whole data set...')
     locs_3d = smlfm.Fitting.light_field_fit(
-        lfl.filtered_locs_2d, lfm.rho_scaling, fit_params_all)[0]
+        lfl.corrected_locs_2d, lfm.rho_scaling, fit_params_all)[0]
     print(f'Total number of frames used for fitting:'
           f' {np.unique(locs_3d[:, 7]).shape[0]}')
     print(f'Total number of 2D localisations used for fitting:'
