@@ -1,17 +1,16 @@
 import numpy.typing as npt
-from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
+from mpl_toolkits.mplot3d.axes3d import Axes3D
 
 from ..graphs import add_watermark
 
 
-def draw_3d_locs(xyz: npt.NDArray[float],
-                 title: str = '3D'
-                 ) -> plt.Figure:
-    # fig = plt.figure(figsize=(5, 5))  # No layout='tight'
-    fig = plt.figure(figsize=(5, 5), layout='tight')
-    fig.canvas.manager.set_window_title(title)
+def draw_3d_locs(fig: Figure, xyz: npt.NDArray[float]) -> Figure:
+    fig.clear(True)
+    fig.set_size_inches(5, 5)
+    fig.set_layout_engine('tight')
 
-    ax = fig.add_subplot(projection='3d')
+    ax: Axes3D = fig.add_subplot(projection='3d')
     ax.set_xlabel(r'X [$\mu$m]')
     ax.set_ylabel(r'Y [$\mu$m]')
     ax.set_zlabel(r'Z [$\mu$m]')

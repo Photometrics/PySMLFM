@@ -3,18 +3,22 @@ from typing import Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
-from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 
-from ..graphs import add_watermark, draw_3d_locs, draw_occurrences, draw_histogram
+from ..graphs import draw_3d_locs, draw_occurrences, draw_histogram
 
 
-def reconstruct_results(locs3d_data_or_file: Union[Path, npt.NDArray[float]],
+def reconstruct_results(fig1: Figure, fig2: Figure, fig3: Figure,
+                        locs3d_data_or_file: Union[Path, npt.NDArray[float]],
                         max_lateral_err: Union[float, None] = None,
                         min_view_count: Union[int, None] = None
-                        ) -> Tuple[plt.Figure, plt.Figure, plt.Figure]:
+                        ) -> Tuple[Figure, Figure, Figure]:
     """Generates 3 final figures with results from stored 3D localisations.
 
     Args:
+        fig3 (Figure): A figure for occurrences.
+        fig2 (Figure): A figure for histogram.
+        fig1 (Figure): A figure for 3D view.
         locs3d_data_or_file (Path or npt.NDArray[float]):
             A CSV file path or a numpy array with 3D localisations.
         max_lateral_err (float): Max. lateral error to show (in microns).
@@ -42,8 +46,8 @@ def reconstruct_results(locs3d_data_or_file: Union[Path, npt.NDArray[float]],
         (lateral_err < max_lateral_err) if max_lateral_err is not None else True,
         (view_count > min_view_count) if min_view_count is not None else True)
 
-    fig1 = draw_occurrences(lateral_err[keep], axial_err[keep], photons[keep])
-    fig2 = draw_histogram(photons[keep], axial_err[keep])
-    fig3 = draw_3d_locs(xyz[keep])
+    draw_occurrences(fig1, lateral_err[keep], axial_err[keep], photons[keep])
+    draw_histogram(fig2, photons[keep], axial_err[keep])
+    draw_3d_locs(fig3, xyz[keep])
 
     return fig1, fig2, fig3

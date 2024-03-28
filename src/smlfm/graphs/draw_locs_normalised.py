@@ -1,21 +1,23 @@
 from typing import Union
 
 import numpy.typing as npt
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from ..graphs import add_watermark
 
 
-def draw_locs_normalised(xy: npt.NDArray[float],
+def draw_locs_normalised(fig: Figure,
+                         xy: npt.NDArray[float],
                          uv: npt.NDArray[float],
                          lens_idx: npt.NDArray[float],
-                         mla_centre: Union[npt.NDArray[float], None] = None,
-                         title: str = 'Normalised localisations with lens centers'
-                         ) -> plt.Figure:
-    fig = plt.figure(figsize=(5, 5), layout='tight')
-    fig.canvas.manager.set_window_title(title)
+                         mla_centre: Union[npt.NDArray[float], None] = None
+                         ) -> Figure:
+    fig.clear(True)
+    fig.set_size_inches(5, 5)
+    fig.set_layout_engine('tight')
 
-    ax = fig.add_subplot()
+    ax: Axes = fig.add_subplot()
     ax.set_xticks([])
     ax.set_yticks([])
 

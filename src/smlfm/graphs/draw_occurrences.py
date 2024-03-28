@@ -1,16 +1,17 @@
 import numpy.typing as npt
-from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 
 from ..graphs import add_watermark
 
 
-def draw_occurrences(lateral_err: npt.NDArray[float],
+def draw_occurrences(fig: Figure,
+                     lateral_err: npt.NDArray[float],
                      axial_err: npt.NDArray[float],
                      photons: npt.NDArray[float],
-                     title: str = 'Occurrences'
-                     ) -> plt.Figure:
-    fig = plt.figure(figsize=(15, 5), layout='tight')
-    fig.canvas.manager.set_window_title(title)
+                     ) -> Figure:
+    fig.clear(True)
+    fig.set_size_inches(15, 5)
+    fig.set_layout_engine('tight')
 
     ax0, ax1, ax2 = fig.subplots(ncols=3)
     ax0.set_xlabel('Lateral fit error [nm]')

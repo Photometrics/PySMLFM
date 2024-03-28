@@ -18,7 +18,7 @@ def app():
     user_interaction_time = 0
     timestamp = datetime.now()
 
-    # 0. Handle option a CLI options
+    # 0. Handle CLI options
 
     cfg_file = None
     csv_file = None
@@ -100,7 +100,8 @@ def app():
     locs_2d_csv[:, 2] -= locs_2d_csv[:, 2].mean()
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
-        smlfm.graphs.draw_locs_csv(locs_2d_csv[:, 1:3])
+        fig = smlfm.graphs.draw_locs_csv(plt.figure(), csv.data[:, 1:3])
+        fig.canvas.manager.set_window_title('Raw localisations')
 
     if cfg.log_timing:
         print(f'Loading {repr(cfg.csv_file.name)} took {1e3 * (time.time() - tic):.3f} ms')
@@ -112,14 +113,15 @@ def app():
         cfg.mla_optic_size, cfg.mla_centre)
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
-        smlfm.graphs.draw_mla(mla.lens_centres, mla.centre)
+        fig = smlfm.graphs.draw_mla(plt.figure(), mla.lens_centres, mla.centre)
+        fig.canvas.manager.set_window_title('Micro-lens array centres')
 
     mla.rotate_lattice(np.deg2rad(cfg.mla_rotation))
     mla.offset_lattice(cfg.mla_offset / lfm.mla_to_xy_scale)  # XY -> MLA
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
-        smlfm.graphs.draw_mla(mla.lens_centres, mla.centre,
-                              title='Micro-lens array centres rotated')
+        fig = smlfm.graphs.draw_mla(plt.figure(), mla.lens_centres, mla.centre)
+        fig.canvas.manager.set_window_title('Micro-lens array centres rotated')
 
     # 4. Map localisations to lenses
 
@@ -132,12 +134,14 @@ def app():
         print(f'Mapping points to lenses took {1e3 * (time.time() - tic):.3f} ms')
 
     if cfg.show_graphs and cfg.show_mla_alignment_graph:
-        smlfm.graphs.draw_locs(
+        fig = smlfm.graphs.draw_locs(
+            plt.figure(),
             xy=lfl.filtered_locs_2d[:, 3:5],
             lens_idx=lfl.filtered_locs_2d[:, 12],
             lens_centres=(mla.lens_centres - mla.centre) * lfm.mla_to_xy_scale,
             # U,V values are around MLA centre but that offset is not included
             mla_centre=np.array([0.0, 0.0]))
+        fig.canvas.manager.set_window_title('Localisations with lens centers')
 
         # Ask the user to confirm if micro-lenses are correctly aligned
         if cfg.confirm_mla_alignment:
@@ -202,12 +206,14 @@ def app():
     lfl.correct_xy(correction)
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
-        smlfm.graphs.draw_locs_normalised(
+        fig = smlfm.graphs.draw_locs_normalised(
+            plt.figure(),
             xy=lfl.filtered_locs_2d[:, 3:5] * lfm.xy_to_uv_scale,
             uv=lfl.filtered_locs_2d[:, 1:3],
             lens_idx=lfl.filtered_locs_2d[:, 12],
             # U,V values are around MLA centre but that offset is not included
             mla_centre=np.array([0.0, 0.0]))
+        fig.canvas.manager.set_window_title('Normalised localisations with lens centers')
 
     if cfg.log_timing:
         print(f'Aberration correction took {1e3 * (time.time() - tic):.3f} ms')
@@ -269,8 +275,12 @@ def app():
     # 9. Plotting results
 
     if cfg.show_graphs and cfg.show_result_graphs:
-        smlfm.graphs.reconstruct_results(
+        fig1, fig2, fig3 = smlfm.graphs.reconstruct_results(
+            plt.figure(), plt.figure(), plt.figure(),
             locs_3d, cfg.show_max_lateral_err, cfg.show_min_view_count)
+        fig1.canvas.manager.set_window_title('Occurrences')
+        fig2.canvas.manager.set_window_title('Histogram')
+        fig3.canvas.manager.set_window_title('3D')
 
     # End
 
@@ -282,5 +292,5 @@ def app():
         plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app()
