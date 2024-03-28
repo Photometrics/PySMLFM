@@ -89,19 +89,23 @@ def app():
 
     tic = time.time()
 
-    locs_2d_csv = smlfm.LocalisationFile.read(
-        cfg.csv_file, cfg.csv_format, lfm.pixel_size_sample)
-    print(f'Loaded {locs_2d_csv.shape[0]} localisations from'
-          f' {np.unique(locs_2d_csv[:, 0]).shape[0]} frames')
+    csv = smlfm.LocalisationFile(cfg.csv_file, cfg.csv_format)
+    csv.read()
 
-    # Offset X and Y to their means
-    # TODO: Why offset the data to means? Ensure how is this related to MLA centre.
-    locs_2d_csv[:, 1] -= locs_2d_csv[:, 1].mean()
-    locs_2d_csv[:, 2] -= locs_2d_csv[:, 2].mean()
+    print(f'Loaded {csv.data.shape[0]} localisations from'
+          f' {np.unique(csv.data[:, 0]).shape[0]} frames')
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
         fig = smlfm.graphs.draw_locs_csv(plt.figure(), csv.data[:, 1:3])
         fig.canvas.manager.set_window_title('Raw localisations')
+
+    csv.scale_peakfit_data(lfm.pixel_size_sample)
+    locs_2d_csv = csv.data.copy()
+
+    # Center X and Y to their means
+    # TODO: Why center the data to means? Ensure how is this related to MLA centre.
+    locs_2d_csv[:, 1] -= locs_2d_csv[:, 1].mean()
+    locs_2d_csv[:, 2] -= locs_2d_csv[:, 2].mean()
 
     if cfg.log_timing:
         print(f'Loading {repr(cfg.csv_file.name)} took {1e3 * (time.time() - tic):.3f} ms')
