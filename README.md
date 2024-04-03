@@ -75,17 +75,17 @@ You can also `pip install pyimagej`, but will then need to install
 
 Let's suppose you closed the prompt after initial setup.
 
-1. Get the ZIP archive with sources from GitHub.
+1. Get the ZIP archive with sources from GitHub (`PySMLFM-main.zip`).
 2. Run Miniforge Prompt from Start menu.
 3. Activate _MyEnv_ environment:
    ```
    (base) C:\Users\Me> mamba activate MyEnv
    ```
 4. Install the package from source archive extracted e.g. in your home folder
-   (`PySMLFM-0.1.0.dev0`):
+   (`C:\Users\Me\PySMLFM-main`):
    ```
-   (MyEnv) C:\Users\Me> cd PySMLFM-0.1.0.dev0
-   (MyEnv) C:\Users\Me\PySMLFM-0.1.0.dev0> pip install .
+   (MyEnv) C:\Users\Me> cd PySMLFM-main
+   (MyEnv) C:\Users\Me\PySMLFM-main> pip install .
    ```
 
 ## Execution
