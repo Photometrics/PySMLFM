@@ -1,5 +1,7 @@
+import dataclasses
+import multiprocessing as mp
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Callable, List, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -23,23 +25,20 @@ class Fitting:
         dist_search: float
         # A tolerance for selecting with angles around relative UV (in degrees).
         angle_tolerance: float
-        # TODO: Review and fix documentation.
-        # Max. distance of the candidate from ???.
+        # A max. distance of the candidate (in microns).
         threshold: float
-        # Min. number of views the candidate is seen to count it.
+        # A min. number of views the candidate is seen to count it.
         min_views: int
         # A calibration factor between optical and physical Z.
-        z_calib: float = None
+        z_calib: Union[float, None] = None
 
     @dataclass
     class AberrationParams:
-        # TODO: Review documentation.
-        # Max. standard error in Z to apply correction (in microns).
+        # A max. standard error in Z to apply correction (in microns).
         axial_window: float
-        # TODO: Review documentation.
-        # Min. number of photons to apply correction.
+        # A min. number of photons to apply correction.
         photon_threshold: int
-        # Min. number of views the candidate is seen to count it.
+        # A min. number of views the candidate is seen to count it.
         min_views: int
 
     @dataclass
@@ -59,7 +58,11 @@ class Fitting:
     @staticmethod
     def light_field_fit(locs_2d: npt.NDArray[float],
                         rho_scaling: float,
-                        fit_params: FitParams
+                        fit_params: FitParams,
+                        abort_event: Union[mp.Event, None] = None,
+                        progress_func: Union[Callable[[int, int, int], None], None] = None,
+                        progress_step: int = 1000,
+                        worker_count: Union[int, None] = None,
                         ) -> Tuple[npt.NDArray[float], List[FitData]]:
         """TODO: Add documentation.
 
@@ -71,6 +74,21 @@ class Fitting:
                 A scaling factor to convert microns in image plane to rho.
             fit_params (FitParams):
                 A configuration for fit detection.
+            abort_event (Union[mp.Event, None]):
+                An event to be periodically checked (without blocking).
+                If set, the processing is aborted and function returns.
+            progress_func (Union[Callable[[int, int, int], None], None]):
+                A callback function for reporting progress. The function gets
+                three arguments. First is a frame number of currently processed
+                frame, the second and third are min. and max. frame numbers
+                received via `fit_params`.
+            progress_step (int):
+                Defines how often is the `progress_func` function called, if set.
+                The frames are processed in groups of 100 frames which is also
+                the lowest value.
+            worker_count (Union[int, None]):
+                It is the number of worker processes to run in parallel.
+                If it is None then the number returned by `os.cpu_count()` is used.
 
         Returns:
             Returns a tuple.
@@ -84,7 +102,7 @@ class Fitting:
               - [3] lateral error, a mean of standard errors on X,Y
                     (float, in microns)
               - [4] axial error, a standard error on Z (float, in microns)
-              - [5] number of views in fit (int, byt stored as float)
+              - [5] number of views in fit (int, but stored as float)
               - [6] number of photons in fit (float)
               - [7] frame number (int, but stored as float)
 
@@ -95,6 +113,70 @@ class Fitting:
 
         min_frame = fit_params.frame_min
         max_frame = fit_params.frame_max
+        frame_count = max_frame - min_frame + 1
+
+        if min_frame > max_frame:
+            raise ValueError(
+                f'min. frame nr. ({min_frame}) > max. frame nr. ({max_frame})')
+
+        frames_per_task = 100
+        task_count = int((frame_count + frames_per_task - 1) / frames_per_task)
+
+        if (worker_count is not None and worker_count == 1) or task_count == 1:
+            return Fitting._light_field_fit_task(
+                locs_2d, rho_scaling, fit_params, abort_event)
+
+        fitted_points = np.empty((0, 8))
+        total_fit = list()  # List of FitData
+
+        frame = min_frame
+        progress_next_frame = min_frame + progress_step
+
+        with mp.Pool(processes=worker_count) as pool:
+            procs = [Union[mp.Process, None]] * task_count
+
+            for idx in range(task_count):
+                fit_params_n = dataclasses.replace(
+                    fit_params,
+                    frame_min=min_frame + frames_per_task * idx,
+                    frame_max=min(min_frame + frames_per_task * (idx + 1), max_frame),
+                )
+                # Cannot pass the `abort_event` to processes, otherwise following
+                # runtime error is raised: "Conditional objects should only be
+                # shared between processes through inheritance"
+                args = (locs_2d, rho_scaling, fit_params_n, None)
+                procs[idx] = pool.apply_async(Fitting._light_field_fit_task, args)
+
+            for idx in range(task_count):
+                fitted_points_n, total_fit_n = procs[idx].get()
+
+                if abort_event is not None:
+                    if abort_event.is_set():
+                        return np.empty((0, 8)), list()
+
+                fitted_points = np.row_stack((fitted_points, fitted_points_n))
+                total_fit += total_fit_n
+
+                if progress_func is not None:
+                    frame = min(frame + frames_per_task, max_frame)
+                    if frame >= progress_next_frame or frame == max_frame:
+                        progress_func(frame, min_frame, max_frame)
+                        progress_next_frame += progress_step
+
+        return fitted_points, total_fit
+
+    @staticmethod
+    def _light_field_fit_task(locs_2d: npt.NDArray[float],
+                              rho_scaling: float,
+                              fit_params: FitParams,
+                              abort_event: Union[mp.Event, None] = None,
+                              progress_func: Union[Callable[[int, int, int], None], None] = None,
+                              progress_step: int = 1000
+                              ) -> Tuple[npt.NDArray[float], List[FitData]]:
+        """A task executed multiple times in separate process to speed up."""
+
+        min_frame = fit_params.frame_min
+        max_frame = fit_params.frame_max
         min_views = fit_params.min_views
         fit_threshold = fit_params.threshold
         z_calib = fit_params.z_calib
@@ -102,9 +184,18 @@ class Fitting:
         fitted_points = np.empty((0, 8))
         total_fit = list()  # List of FitData
 
+        progress_next_frame = min_frame + progress_step
+
         for frame in range(min_frame, max_frame + 1):
-            if frame % 1000 == 0:
-                print(f'Processing frame {frame}/{max_frame}...')
+
+            if abort_event is not None:
+                if abort_event.is_set():
+                    return np.empty((0, 8)), list()
+
+            if progress_func is not None:
+                if frame >= progress_next_frame or frame == max_frame:
+                    progress_func(frame, min_frame, max_frame)
+                    progress_next_frame += progress_step
 
             # Sort potential seeds by central view first
             candidates = locs_2d[locs_2d[:, 0] == frame, :].copy()
@@ -177,7 +268,8 @@ class Fitting:
     def calculate_view_error(locs_2d: npt.NDArray[float],
                              rho_scaling: float,
                              fit_data: List[FitData],
-                             aberration_params: AberrationParams):
+                             aberration_params: AberrationParams
+                             ) -> npt.NDArray[float]:
         """Calculates average fit error.
 
         Args:
@@ -192,7 +284,7 @@ class Fitting:
 
         Returns:
             Returns average fit error, a sort of average aberration, across all
-            fitted points (in microns), following 5 columns:
+            fitted points (in microns), with following 5 columns:
 
             * [0] Original U coordinate (in normalised pupil coordinates)
             * [1] Original V coordinate (in normalised pupil coordinates)
@@ -235,7 +327,8 @@ class Fitting:
 
     @staticmethod
     def _get_backward_model(locs: npt.NDArray[float],
-                            rho_scaling: float):
+                            rho_scaling: float
+                            ) -> Tuple[npt.NDArray[float], npt.NDArray[float], float]:
         """TODO: Add documentation.
 
         Args:

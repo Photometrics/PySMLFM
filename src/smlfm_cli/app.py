@@ -200,8 +200,8 @@ def app():
 
     cor_frame_cnt = fit_params_cor.frame_max - fit_params_cor.frame_min + 1
     print(f'Fitting first {cor_frame_cnt} frames for aberration correction...')
-    fit_data = smlfm.Fitting.light_field_fit(
-        lfl.filtered_locs_2d, lfm.rho_scaling, fit_params_cor)[1]
+    _, fit_data = smlfm.Fitting.light_field_fit(
+        lfl.filtered_locs_2d, lfm.rho_scaling, fit_params_cor)
 
     correction = smlfm.Fitting.calculate_view_error(
         lfl.filtered_locs_2d, lfm.rho_scaling, fit_data, cfg.aberration_params)
@@ -240,8 +240,11 @@ def app():
     )
 
     print('Fitting data set...')
-    locs_3d = smlfm.Fitting.light_field_fit(
-        lfl.corrected_locs_2d, lfm.rho_scaling, fit_params_all)[0]
+    locs_3d, _ = smlfm.Fitting.light_field_fit(
+        lfl.corrected_locs_2d, lfm.rho_scaling, fit_params_all,
+        progress_func=lambda frame, _min_frame, max_frame:
+            print(f'Processing frame {frame}/{max_frame}...'))
+
     print(f'Total number of frames used for fitting:'
           f' {np.unique(locs_3d[:, 7]).shape[0]}')
     print(f'Total number of 2D localisations used for fitting:'
