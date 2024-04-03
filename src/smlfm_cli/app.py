@@ -190,10 +190,12 @@ def app():
 
     fit_params_cor = dataclasses.replace(
         cfg.fit_params_aberration,
-        frame_min=lfl.min_frame,
-        frame_max=np.min([
-            lfl.min_frame - 1 + cfg.fit_params_aberration.frame_max,
-            lfl.max_frame]),
+        frame_min=(cfg.fit_params_aberration.frame_min
+                   if cfg.fit_params_aberration.frame_min > 0
+                   else lfl.min_frame),
+        frame_max=(cfg.fit_params_aberration.frame_max
+                   if cfg.fit_params_aberration.frame_max > 0
+                   else min(1000, lfl.max_frame)),
     )
 
     cor_frame_cnt = fit_params_cor.frame_max - fit_params_cor.frame_min + 1
@@ -229,11 +231,15 @@ def app():
 
     fit_params_all = dataclasses.replace(
         cfg.fit_params_full,
-        frame_min=lfl.min_frame,
-        frame_max=lfl.max_frame,
+        frame_min=(cfg.fit_params_full.frame_min
+                   if cfg.fit_params_full.frame_min > 0
+                   else lfl.min_frame),
+        frame_max=(cfg.fit_params_full.frame_max
+                   if cfg.fit_params_full.frame_max > 0
+                   else lfl.max_frame),
     )
 
-    print('Fitting whole data set...')
+    print('Fitting data set...')
     locs_3d = smlfm.Fitting.light_field_fit(
         lfl.corrected_locs_2d, lfm.rho_scaling, fit_params_all)[0]
     print(f'Total number of frames used for fitting:'

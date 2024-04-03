@@ -85,9 +85,9 @@ class Config:
     _fit_params_aberration_doc: str = (
         'A fitting parameters for aberration correction purposes.')
     _fit_params_aberration_frame_min_doc: str = (
-        'A min. frame number.')
+        'A min. frame number, zero or negative to auto-fill min. value.')
     _fit_params_aberration_frame_max_doc: str = (
-        'A max. frame number.')
+        'A max. frame number, zero or negative to auto-fill default value 1000.')
     _fit_params_aberration_disparity_max_doc: str = (
         'A limit of possible disparity between adjacent views,\n'
         'from negative to positive value (in microns).')
@@ -105,7 +105,7 @@ class Config:
         'A calibration factor between optical and physical Z axis.')
     fit_params_aberration: Fitting.FitParams = Fitting.FitParams(
         frame_min=-1,
-        frame_max=1000,
+        frame_max=-1,
         disparity_max=5.0,
         disparity_step=0.1,
         dist_search=0.5,
@@ -130,9 +130,9 @@ class Config:
     _fit_params_full_doc: str = (
         'A fitting parameters for full data set, used after aberration correction.')
     _fit_params_full_frame_min_doc: str = (
-        'A min. frame number.')
+        'A min. frame number, zero or negative to auto-fill min. value.')
     _fit_params_full_frame_max_doc: str = (
-        'A max. frame number.')
+        'A max. frame number, zero or negative to auto-fill max. value.')
     _fit_params_full_disparity_max_doc: str = (
         'A limit of possible disparity between adjacent views,\n'
         'from negative to positive value (in microns).')
