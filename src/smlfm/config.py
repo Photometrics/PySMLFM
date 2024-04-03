@@ -10,6 +10,7 @@ import numpy.typing as npt
 
 from .fitting import Fitting
 from .localisation_file import LocalisationFile
+from .localisations import Localisations
 from .micro_lens_array import MicroLensArray
 
 
@@ -28,7 +29,6 @@ class Config:
         'Supported values: \'PEAKFIT\', \'THUNDERSTORM\', \'PICASSO\'.')
     csv_format: LocalisationFile.Format = LocalisationFile.Format.PEAKFIT
 
-    # An MLA lens arrangement
     _mla_type_doc: str = (
         'A Micro-Lens Array lens arrangement.\n'
         'Supported values: \'HEXAGONAL\', \'SQUARE\'.')
@@ -76,6 +76,11 @@ class Config:
     _pixel_size_camera_doc: str = (
         'A camera pixel size (in microns).')
     pixel_size_camera: float = 16.0
+
+    _alpha_model_doc: str = (
+        'A model used for mapping.\n'
+        'Supported values: \'LINEAR\', \'SPHERE\', \'INTEGRATE_SPHERE\'.')
+    alpha_model: Localisations.AlphaModel = Localisations.AlphaModel.INTEGRATE_SPHERE
 
     _fit_params_aberration_doc: str = (
         'A fitting parameters for aberration correction purposes.')
@@ -229,6 +234,8 @@ class Config:
                 cfg.__setattr__(field.name, Path(value))
             elif field.type is LocalisationFile.Format:
                 cfg.__setattr__(field.name, LocalisationFile.Format[value])
+            elif field.type is Localisations.AlphaModel:
+                cfg.__setattr__(field.name, Localisations.AlphaModel[value])
             elif field.type is MicroLensArray.LatticeType:
                 cfg.__setattr__(field.name, MicroLensArray.LatticeType[value])
             elif (field.type is np.ndarray  # NDArray is deserialized to list

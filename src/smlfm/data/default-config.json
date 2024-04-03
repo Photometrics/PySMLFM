@@ -37,6 +37,8 @@
     "ref_idx_medium": 1.33,
     "_pixel_size_camera_doc": "A camera pixel size (in microns).",
     "pixel_size_camera": 16.0,
+    "_alpha_model_doc": "A model used for mapping.\nSupported values: 'LINEAR', 'SPHERE', 'INTEGRATE_SPHERE'.",
+    "alpha_model": "INTEGRATE_SPHERE",
     "_fit_params_aberration_doc": "A fitting parameters for aberration correction purposes.",
     "_fit_params_aberration_frame_min_doc": "A min. frame number.",
     "_fit_params_aberration_frame_max_doc": "A max. frame number.",

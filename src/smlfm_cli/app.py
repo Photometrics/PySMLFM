@@ -29,7 +29,7 @@ def app():
         elif a.endswith('.csv'):
             csv_file = Path(arg)
         else:
-            print(f'WARNING: Ignoring unrecognized option \'{arg}\'')
+            print(f'WARNING: Ignoring unrecognized option "{arg}"')
 
     # 1. Prepare configuration
 
@@ -60,7 +60,7 @@ def app():
         print('ERROR: The CSV file not set')
         sys.exit(1)
     if not cfg.csv_file.exists():
-        print(f'ERROR: The CSV file \'{cfg.csv_file}\' does not exist')
+        print(f'ERROR: The CSV file "{cfg.csv_file}" does not exist')
         sys.exit(2)
 
     # Uncomment to override
@@ -179,7 +179,7 @@ def app():
     # lfl.filter_spot_sizes([0.1, 1.0])
     # lfl.filter_photons([0.0, 500.0])
 
-    lfl.init_alpha_uv(smlfm.Localisations.AlphaModel.INTEGRATE_SPHERE, lfm)
+    lfl.init_alpha_uv(cfg.alpha_model, lfm)
 
     if cfg.log_timing:
         print(f'Filtering and setting alpha model took {1e3 * (time.time() - tic):.3f} ms')
@@ -240,20 +240,20 @@ def app():
           f' {np.unique(locs_3d[:, 7]).shape[0]}')
     print(f'Total number of 2D localisations used for fitting:'
           f' {int(np.sum(locs_3d[:, 5]))}')
-    print(f'Final number of 3D localisations: {locs_3d.shape[0]}')
+    print(f'Total number of 3D localisations: {locs_3d.shape[0]}')
 
     if cfg.log_timing:
         print(f'Complete fitting took {1e3 * (time.time() - tic):.3f} ms')
 
     # 8. Write the results
 
-    if cfg.save_dir is not None:
+    if cfg.save_dir is not None and cfg.save_dir:
 
         timestamp_str = timestamp.strftime('%Y%m%d-%H%M%S')
         subdir_name = Path(f'3D Fitting - {timestamp_str} - {cfg.csv_file.name}')
 
         results = smlfm.OutputFiles(cfg, subdir_name)
-        print(f'Saving results to \'{results.folder.name}\' folder...')
+        print(f'Saving results to folder: "{results.folder.name}"')
 
         try:
             results.mkdir()
