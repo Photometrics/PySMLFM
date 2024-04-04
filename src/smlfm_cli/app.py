@@ -179,7 +179,7 @@ def app():
     # lfl.filter_spot_sizes([0.1, 1.0])
     # lfl.filter_photons([0.0, 500.0])
 
-    lfl.init_alpha_uv(cfg.alpha_model, lfm)
+    lfl.init_alpha_uv(cfg.alpha_model, lfm, worker_count=cfg.max_workers)
 
     if cfg.log_timing:
         print(f'Filtering and setting alpha model took {1e3 * (time.time() - tic):.3f} ms')
@@ -202,7 +202,8 @@ def app():
           f' {fit_params_cor.frame_min}-{fit_params_cor.frame_max}'
           f' for aberration correction...')
     _, fit_data = smlfm.Fitting.light_field_fit(
-        lfl.filtered_locs_2d, lfm.rho_scaling, fit_params_cor)
+        lfl.filtered_locs_2d, lfm.rho_scaling, fit_params_cor,
+        worker_count=cfg.max_workers)
 
     correction = smlfm.Fitting.calculate_view_error(
         lfl.filtered_locs_2d, lfm.rho_scaling, fit_data, cfg.aberration_params)
@@ -244,6 +245,7 @@ def app():
           f' {fit_params_all.frame_min}-{fit_params_all.frame_max}...')
     locs_3d, _ = smlfm.Fitting.light_field_fit(
         lfl.corrected_locs_2d, lfm.rho_scaling, fit_params_all,
+        worker_count=cfg.max_workers,
         progress_func=lambda frame, min_frame, max_frame:
             print(f'Processing frame'
                   f' {frame - min_frame + 1}/{max_frame - min_frame + 1}...'))

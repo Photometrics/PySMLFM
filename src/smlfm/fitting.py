@@ -62,7 +62,7 @@ class Fitting:
                         abort_event: Union[mp.Event, None] = None,
                         progress_func: Union[Callable[[int, int, int], None], None] = None,
                         progress_step: int = 1000,
-                        worker_count: Union[int, None] = None,
+                        worker_count: Union[int, None] = None
                         ) -> Tuple[npt.NDArray[float], List[FitData]]:
         """TODO: Add documentation.
 
@@ -122,7 +122,7 @@ class Fitting:
         frames_per_task = 100
         task_count = int((frame_count + frames_per_task - 1) / frames_per_task)
 
-        if (worker_count is not None and worker_count == 1) or task_count == 1:
+        if (worker_count is not None and worker_count <= 1) or task_count == 1:
             return Fitting._light_field_fit_task(
                 locs_2d, rho_scaling, fit_params, abort_event)
 

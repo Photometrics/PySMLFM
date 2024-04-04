@@ -197,6 +197,12 @@ class Config:
         'Print timing messages to console for all lengthy operations.')
     log_timing: bool = True
 
+    _max_workers_doc: str = (
+        'Limit the number of parallel workers used to speed up some computations.\n'
+        'If set to \'null\', all CPUs in the system are used.\n'
+        'If set to value 1 or less, only one worker is used.')
+    max_workers: int = None
+
     def to_json(self, **kwargs):
         indent = kwargs.pop('indent', 4)  # Indent with 4 spaces by default
 

@@ -233,7 +233,7 @@ class Localisations:
         row_count = uv.shape[0]
         task_count = int((row_count + rows_per_task - 1) / rows_per_task)
 
-        if (worker_count is not None and worker_count == 1) or task_count == 1:
+        if (worker_count is not None and worker_count <= 1) or task_count == 1:
             Localisations._phase_average_sphere_fn(
                 range(row_count), uv, uv_scaling, na, n, m,
                 alpha_uv, abort_event)
