@@ -18,7 +18,8 @@ def draw_histogram(fig: Figure,
     ax.set_ylabel('Axial precision [nm]')
     gr = ax.hist2d(photons, axial_err * 1000, bins=40)
 
-    fig.colorbar(gr[3], ax=ax)
+    cbar = fig.colorbar(gr[3], ax=ax)
+    cbar.set_label('Number of localisations')
 
     add_watermark(fig)
     return fig
