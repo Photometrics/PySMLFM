@@ -175,7 +175,7 @@ class Config:
         'Show only final three graphs with 3D view, histogram and errors.')
     show_result_graphs: bool = True
     _show_mla_alignment_graph_doc: str = (
-        'Show micro-lenses together with localizations.')
+        'Show micro-lenses together with localisations.')
     show_mla_alignment_graph: bool = True
     _show_all_debug_graphs_doc: str = (
         'Show all remaining graphs.')

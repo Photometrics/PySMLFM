@@ -38,7 +38,7 @@ def reconstruct_results(fig1: Figure, fig2: Figure, fig3: Figure,
     xyz = locs_3d[:, 0:3]  # X, Y, Z
     lateral_err = locs_3d[:, 3]  # Fitting error in X and Y (in microns)
     axial_err = locs_3d[:, 4]  # Fitting error in Z (in microns)
-    view_count = locs_3d[:, 5]  # Number of views used to fit the localization
+    view_count = locs_3d[:, 5]  # Number of views used to fit the localisation
     photons = locs_3d[:, 6]  # Number of photons in fit
     # frames = locs_3d[:, 7]  # Frames
 

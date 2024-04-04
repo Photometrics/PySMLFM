@@ -96,7 +96,7 @@
     "show_graphs": true,
     "_show_result_graphs_doc": "Show only final three graphs with 3D view, histogram and errors.",
     "show_result_graphs": true,
-    "_show_mla_alignment_graph_doc": "Show micro-lenses together with localizations.",
+    "_show_mla_alignment_graph_doc": "Show micro-lenses together with localisations.",
     "show_mla_alignment_graph": true,
     "_show_all_debug_graphs_doc": "Show all remaining graphs.",
     "show_all_debug_graphs": false,

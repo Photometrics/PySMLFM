@@ -41,7 +41,7 @@ class LocalisationFile:
     def __init__(self,
                  csv_file: Path,
                  file_format: Format):
-        """Constructs the localization file wrapper.
+        """Constructs the localisation file wrapper.
 
         Args:
             csv_file (Path): A file name with path to parse.
