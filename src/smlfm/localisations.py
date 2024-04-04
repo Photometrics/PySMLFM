@@ -1,5 +1,7 @@
+import multiprocessing as mp
 import warnings
 from enum import Enum, unique
+from multiprocessing.shared_memory import SharedMemory as mp_SharedMemory
 from typing import Tuple, Union
 
 import numpy as np
@@ -141,7 +143,9 @@ class Localisations:
 
     def init_alpha_uv(self,
                       model: AlphaModel,
-                      lfm: FourierMicroscope
+                      lfm: FourierMicroscope,
+                      abort_event: Union[mp.Event, None] = None,
+                      worker_count: Union[int, None] = None
                       ) -> None:
         """TODO: Add documentation.
 
@@ -149,35 +153,43 @@ class Localisations:
             model (AlphaModel): A model used for mapping.
             lfm (FourierMicroscope):
                 An instance of fourier light field microscope class.
+            abort_event (Union[mp.Event, None]):
+                An event to be periodically checked (without blocking).
+                If set, the processing is aborted and function returns.
+            worker_count (Union[int, None]):
+                It is the number of worker processes to run in parallel.
+                If it is None then the number returned by `os.cpu_count()` is used.
         """
 
-        u = self.filtered_locs_2d[:, 1]
-        v = self.filtered_locs_2d[:, 2]
+        uv = self.filtered_locs_2d[:, 1:3]
+        alpha_uv = self.filtered_locs_2d[:, 10:12]
         na = lfm.num_aperture
         n = lfm.ref_idx_medium
 
         if model == Localisations.AlphaModel.LINEAR:
-            alpha_u = u.copy()
-            alpha_v = v.copy()
+            alpha_uv[:] = uv
 
         elif model == Localisations.AlphaModel.SPHERE:
-            rho = np.sqrt(u**2 + v**2)
+            rho = np.sqrt(np.sum(uv**2, axis=1))
             dr_sq = 1 - rho * (na / n)**2  # TODO: REVIEW! Should we use (rho**2) here?
             dr_sq[dr_sq < 0.0] = np.nan  # No negative numbers for sqrt
             phi = -(na / n) / np.sqrt(dr_sq)
-            alpha_u = u * phi
-            alpha_v = v * phi
+            alpha_uv[:] = uv * phi
 
         elif model == Localisations.AlphaModel.INTEGRATE_SPHERE:
-            u_scaling = lfm.mla_to_uv_scale
-            alpha_u, alpha_v = self._phase_average_sphere(
-                u, v, u_scaling, na, n, 10)
+            uv_scaling = lfm.mla_to_uv_scale
+            m = 10
+            self._phase_average_sphere(
+                uv, uv_scaling, na, n, m, alpha_uv, abort_event, worker_count)
+            if abort_event is not None:
+                if abort_event.is_set():
+                    alpha_uv[:] = 0
+                    self.alpha_model = None
+                    return
 
         else:
             raise ValueError(f'Unsupported alpha model with value {model}')
 
-        self.filtered_locs_2d[:, 10] = alpha_u
-        self.filtered_locs_2d[:, 11] = alpha_v
         self.alpha_model = model
 
     def reset_correction(self) -> None:
@@ -202,23 +214,119 @@ class Localisations:
             x[idx] -= correction[i, 2]
             y[idx] -= correction[i, 3]
 
+    _SHM_NAME__PHASE_AVG__UV = 'smlfm-phase_avg_sphere-uv'
+    _SHM_NAME__PHASE_AVG__ALPHA_UV = 'smlfm-phase_avg_sphere-alpha_uv'
+
     @staticmethod
-    def _phase_average_sphere(u: npt.NDArray[float],
-                              v: npt.NDArray[float],
-                              u_scaling: float,
+    def _phase_average_sphere(uv: npt.NDArray[float],
+                              uv_scaling: float,
                               na: float,
                               n: float,
-                              m: int
-                              ) -> (npt.NDArray[float], npt.NDArray[float]):
+                              m: int,
+                              alpha_uv: npt.NDArray[float],
+                              abort_event: Union[mp.Event, None] = None,
+                              worker_count: Union[int, None] = None
+                              ) -> None:
         """TODO: Add documentation."""
 
-        dus2 = u_scaling / 2
-        alpha_u = u.copy()
-        alpha_v = v.copy()
+        rows_per_task = 500
+        row_count = uv.shape[0]
+        task_count = int((row_count + rows_per_task - 1) / rows_per_task)
 
-        for i in range(u.shape[0]):
-            range_u = np.linspace(u[i] - dus2, u[i] + dus2, m + 1)
-            range_v = np.linspace(v[i] - dus2, v[i] + dus2, m + 1)
+        if (worker_count is not None and worker_count == 1) or task_count == 1:
+            Localisations._phase_average_sphere_fn(
+                range(row_count), uv, uv_scaling, na, n, m,
+                alpha_uv, abort_event)
+            return
+
+        shm_bytes = uv.shape[0] * uv.shape[1] * uv.itemsize
+
+        shm_uv = mp_SharedMemory(
+            Localisations._SHM_NAME__PHASE_AVG__UV,
+            create=True, size=shm_bytes)
+        shm_alpha_uv = mp_SharedMemory(
+            Localisations._SHM_NAME__PHASE_AVG__ALPHA_UV,
+            create=True, size=shm_bytes)
+
+        uv_data = np.ndarray(
+            shape=uv.shape, dtype=float, buffer=shm_uv.buf)
+        alpha_uv_data = np.ndarray(
+            shape=uv.shape, dtype=float, buffer=shm_alpha_uv.buf)
+
+        # Fill shared memory with input data
+        uv_data[:] = uv
+
+        try:
+            with mp.Pool(processes=worker_count) as pool:
+                procs = [Union[mp.Process, None]] * task_count
+
+                for idx in range(task_count):
+                    i_range_n = range(rows_per_task * idx,
+                                      min(rows_per_task * (idx + 1), row_count))
+                    # Cannot pass the `abort_event` to processes, otherwise following
+                    # runtime error is raised: "Conditional objects should only be
+                    # shared between processes through inheritance"
+                    args = (i_range_n, row_count, uv_scaling, na, n, m, None)
+                    procs[idx] = pool.apply_async(
+                        Localisations._phase_average_sphere_task, args)
+
+                for idx in range(task_count):
+                    procs[idx].get()
+                    if abort_event is not None:
+                        if abort_event.is_set():
+                            return
+
+        finally:
+            if abort_event is None or not abort_event.is_set():
+                # Copy output data to target location
+                alpha_uv[:] = alpha_uv_data
+            shm_alpha_uv.unlink()
+            shm_uv.unlink()
+
+    @staticmethod
+    def _phase_average_sphere_task(i_range: range,
+                                   uv_rows: int,
+                                   uv_scaling: float,
+                                   na: float,
+                                   n: float,
+                                   m: int,
+                                   abort_event: Union[mp.Event, None] = None
+                                   ) -> None:
+        shm_uv = mp_SharedMemory(
+            Localisations._SHM_NAME__PHASE_AVG__UV)
+        shm_alpha_uv = mp_SharedMemory(
+            Localisations._SHM_NAME__PHASE_AVG__ALPHA_UV)
+        try:
+            uv = np.ndarray(
+                shape=(uv_rows, 2), dtype=float, buffer=shm_uv.buf)
+            alpha_uv = np.ndarray(
+                shape=(uv_rows, 2), dtype=float, buffer=shm_alpha_uv.buf)
+
+            Localisations._phase_average_sphere_fn(
+                i_range, uv, uv_scaling, na, n, m, alpha_uv, abort_event)
+        finally:
+            shm_alpha_uv.close()
+            shm_uv.close()
+
+    @staticmethod
+    def _phase_average_sphere_fn(i_range: range,
+                                 uv: npt.NDArray[float],
+                                 uv_scaling: float,
+                                 na: float,
+                                 n: float,
+                                 m: int,
+                                 alpha_uv: npt.NDArray[float],
+                                 abort_event: Union[mp.Event, None] = None
+                                 ) -> None:
+        ds2 = uv_scaling / 2
+
+        for i in i_range:
+            if abort_event is not None:
+                if abort_event.is_set():
+                    return
+
+            range_u = np.linspace(uv[i, 0] - ds2, uv[i, 0] + ds2, m + 1)
+            range_v = np.linspace(uv[i, 1] - ds2, uv[i, 1] + ds2, m + 1)
             um, vm = np.meshgrid(range_u, range_v)
 
             rho_sq = um**2 + vm**2
@@ -229,7 +337,5 @@ class Localisations:
             # Suppress RuntimeWarnings if all values in um/vm are NaNs
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
-                alpha_u[i] = np.nanmean(um * phi)
-                alpha_v[i] = np.nanmean(vm * phi)
-
-        return alpha_u, alpha_v
+                alpha_uv[i, 0] = np.nanmean(um * phi)
+                alpha_uv[i, 1] = np.nanmean(vm * phi)
