@@ -52,12 +52,15 @@ class LocalisationFile:
         self.file_format = file_format
         self.pixel_size: float = 1.0
         self.data: Union[npt.NDArray[float], None] = None
-        self.data_offset = np.array([0.0, 0.0])
 
         self._raw_data: Union[npt.NDArray[float], None] = None
 
     def read(self) -> None:
         """Parses the CSV file."""
+
+        self.pixel_size = 1.0
+        self.data = None
+        self._raw_data = None
 
         if self.file_format == LocalisationFile.Format.PICASSO:
             id_frame = 1       # column index with frame number
@@ -99,14 +102,14 @@ class LocalisationFile:
                              f' {self.file_format}')
 
         csv_header_rows = 0
+        max_line_len = 16384
         with open(self.csv_file, 'r') as f:
             while True:
-                line = f.readline(16384)
+                line = f.readline(max_line_len)
                 if not line:
                     break  # No data in file
-                if line[-1] != '\n':
-                    raise ValueError(f'Row {csv_header_rows + 1} either too'
-                                     f' long or new line character missing')
+                if line[-1] != '\n' and len(line) == max_line_len:
+                    raise ValueError(f'Row {csv_header_rows + 1} is too long')
                 if line[0].isdigit():
                     break  # First row with data
                 csv_header_rows += 1
@@ -114,18 +117,19 @@ class LocalisationFile:
         raw_data = np.genfromtxt(self.csv_file, delimiter=',', dtype=float,
                                  skip_header=csv_header_rows)
 
-        self._raw_data = np.empty((raw_data.shape[0], 8))
-        self._raw_data.fill(np.nan)
-        self._raw_data[:, 0] = raw_data[:, id_frame]
-        self._raw_data[:, 1] = raw_data[:, id_x] / scale_xy
-        self._raw_data[:, 2] = raw_data[:, id_y] / scale_xy
-        self._raw_data[:, 3] = raw_data[:, id_sigma_x] / scale_xy
-        self._raw_data[:, 4] = raw_data[:, id_sigma_y] / scale_xy
-        self._raw_data[:, 5] = raw_data[:, id_intensity]
-        self._raw_data[:, 6] = raw_data[:, id_background]
-        self._raw_data[:, 7] = raw_data[:, id_precision] / scale_pr
+        if raw_data.shape[0] > 0:
+            self._raw_data = np.empty((raw_data.shape[0], 8))
+            self._raw_data.fill(np.nan)
+            self._raw_data[:, 0] = raw_data[:, id_frame]
+            self._raw_data[:, 1] = raw_data[:, id_x] / scale_xy
+            self._raw_data[:, 2] = raw_data[:, id_y] / scale_xy
+            self._raw_data[:, 3] = raw_data[:, id_sigma_x] / scale_xy
+            self._raw_data[:, 4] = raw_data[:, id_sigma_y] / scale_xy
+            self._raw_data[:, 5] = raw_data[:, id_intensity]
+            self._raw_data[:, 6] = raw_data[:, id_background]
+            self._raw_data[:, 7] = raw_data[:, id_precision] / scale_pr
 
-        self.data = self._raw_data.copy()
+            self.data = self._raw_data.copy()
 
     def scale_peakfit_data(self,
                            pixel_size: float
