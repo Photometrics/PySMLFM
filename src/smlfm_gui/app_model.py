@@ -24,6 +24,10 @@ class IStage:
         """Returns the next stage type."""
         raise NotImplementedError('Subclass must implement this')
 
+    def stage_is_active(self) -> bool:
+        """Returns the stage state, True when the stage has valid input."""
+        raise NotImplementedError('Subclass must implement this')
+
     def stage_invalidate(self):
         """Invalidates the stage data."""
         raise NotImplementedError('Subclass must implement this')
@@ -261,6 +265,11 @@ class AppModel:
     def stage_enabled(self, st: Union[StageType, None], enabled: bool):
         if st is not None:
             self._ui_numbers[st].configure(state=tk.NORMAL if enabled else tk.DISABLED)
+
+    def stage_is_active(self, st: Union[StageType, None]):
+        if st is not None:
+            return self._stages[st].stage_is_active()
+        return False
 
     def stage_invalidate(self, st: Union[StageType, None]):
         if st is not None:

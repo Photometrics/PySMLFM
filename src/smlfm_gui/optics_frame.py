@@ -97,6 +97,10 @@ class OpticsFrame(ttk.Frame, IStage):
     def stage_type_next(self):
         return self._stage_type_next
 
+    def stage_is_active(self) -> bool:
+        csv = self._model.csv
+        return csv is not None and csv.data is not None and csv.data.shape[0] > 0
+
     def stage_invalidate(self):
         self._model.lfm = None
         self._model.mla = None
@@ -138,29 +142,30 @@ class OpticsFrame(ttk.Frame, IStage):
                     self.stage_invalidate()
                     return
 
-                if self._model.cfg.show_graphs:
-                    if self._model.cfg.show_all_debug_graphs:
-                        self._var_preview_mla.set(1)
-                        self._on_preview_mla()
-                    if self._model.cfg.show_mla_alignment_graph:
-                        self._var_preview.set(1)
-                        self._on_preview()
+                if self._model.stage_is_active(self._stage_type_next):
+                    if self._model.cfg.show_graphs:
+                        if self._model.cfg.show_all_debug_graphs:
+                            self._var_preview_mla.set(1)
+                            self._on_preview_mla()
+                        if self._model.cfg.show_mla_alignment_graph:
+                            self._var_preview.set(1)
+                            self._on_preview()
 
-                self._model.stage_ui_init(self._stage_type_next)
-                # Next phase updates automatically or the user continues manually
-                if self._model.cfg.confirm_mla_alignment:
-                    self._model.stage_ui_flash(self._stage_type_next)
-                else:
-                    self._model.stage_start_update(self._stage_type_next)
+                    self._model.stage_ui_init(self._stage_type_next)
+                    # Next phase updates automatically or the user continues manually
+                    if self._model.cfg.confirm_mla_alignment:
+                        self._model.stage_ui_flash(self._stage_type_next)
+                    else:
+                        self._model.stage_start_update(self._stage_type_next)
 
-                if self._model.cfg.confirm_mla_alignment:
-                    messagebox.showinfo(
-                        title='Confirmation',
-                        message='Check on the figure that the lenses are well'
-                                ' aligned with the data. If the alignment is'
-                                ' incorrect, adjust Micro-Lens Array parameters.\n'
-                                '\n'
-                                'Otherwise continue with flashing button.')
+                    if self._model.cfg.confirm_mla_alignment:
+                        messagebox.showinfo(
+                            title='Confirmation',
+                            message='Check on the figure that the lenses are well'
+                                    ' aligned with the data. If the alignment is'
+                                    ' incorrect, adjust Micro-Lens Array parameters.\n'
+                                    '\n'
+                                    'Otherwise continue with flashing button.')
 
             self._model.invoke_on_gui_thread_async(_update_done)
 
@@ -184,31 +189,36 @@ class OpticsFrame(ttk.Frame, IStage):
     def _ui_update_done(self):
         self._ui_update_start()
 
-        if self._model.csv is not None:
+        if self.stage_is_active():
             self._model.stage_enabled(self._stage_type, True)
 
             self._ui_settings.configure(state=tk.NORMAL)
 
-        if self._model.lfm is not None and self._model.mla is not None:
-            self._ui_preview_mla.configure(state=tk.NORMAL)
+            if self._model.stage_is_active(self._stage_type_next):
+                self._ui_preview_mla.configure(state=tk.NORMAL)
 
-            if self._model.mla.lattice_type == smlfm.MicroLensArray.LatticeType.HEXAGONAL:
-                self._ui_preview_mla[IMAGE] = self._model.icons.opt_hexagon
-            elif self._model.mla.lattice_type == smlfm.MicroLensArray.LatticeType.SQUARE:
-                self._ui_preview_mla[IMAGE] = self._model.icons.opt_square
-            # elif self._model.mla.lattice_type == smlfm.MicroLensArray.LatticeType.TRIANGULAR:
-            #     self._ui_preview_mla[IMAGE] = self._model.icons.opt_triangle
-            else:
-                self._ui_preview_mla[IMAGE] = self._model.icons.opt_dot
+                if (self._model.mla.lattice_type
+                        == smlfm.MicroLensArray.LatticeType.HEXAGONAL):
+                    self._ui_preview_mla[IMAGE] = self._model.icons.opt_hexagon
+                elif (self._model.mla.lattice_type
+                      == smlfm.MicroLensArray.LatticeType.SQUARE):
+                    self._ui_preview_mla[IMAGE] = self._model.icons.opt_square
+                # elif (self._model.mla.lattice_type
+                #       == smlfm.MicroLensArray.LatticeType.TRIANGULAR):
+                #     self._ui_preview_mla[IMAGE] = self._model.icons.opt_triangle
+                else:
+                    self._ui_preview_mla[IMAGE] = self._model.icons.opt_dot
 
-            if self._model.lfl is not None:
-                self._ui_preview.configure(state=tk.NORMAL)
-                lenses = np.unique(self._model.lfl.locs_2d[:, 12]).shape[0]
-                self._var_summary.set(f'Localisations mapped to {lenses} lenses')
+                if self._model.lfl is not None:
+                    self._ui_preview.configure(state=tk.NORMAL)
+                    lenses = np.unique(self._model.lfl.locs_2d[:, 12]).shape[0]
+                    self._var_summary.set(f'Localisations mapped to {lenses} lenses')
+                else:
+                    self._var_summary.set('No localisations mapped to lenses')
             else:
-                self._var_summary.set('No localisations mapped to lenses')
+                self._var_summary.set('No optics configured')
         else:
-            self._var_summary.set('No optics configured')
+            self._var_summary.set('No optics configured yet')
 
     def _on_settings(self):
         messagebox.showinfo(

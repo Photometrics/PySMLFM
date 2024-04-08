@@ -119,6 +119,9 @@ class ConfigFrame(ttk.Frame, IStage):
     def stage_type_next(self):
         return self._stage_type_next
 
+    def stage_is_active(self) -> bool:
+        return True
+
     def stage_invalidate(self):
         self._model.cfg = None
 
@@ -160,8 +163,10 @@ class ConfigFrame(ttk.Frame, IStage):
                     self.stage_invalidate()
                     return
 
-                self._model.stage_ui_init(self._stage_type_next)
-                self._model.stage_start_update(self._stage_type_next)
+                if self._model.stage_is_active(self._stage_type_next):
+                    self._model.stage_ui_init(self._stage_type_next)
+                    if self._model.cfg.csv_file is not None:
+                        self._model.stage_start_update(self._stage_type_next)
 
             self._model.invoke_on_gui_thread_async(_update_done)
 
@@ -208,7 +213,7 @@ class ConfigFrame(ttk.Frame, IStage):
             else:
                 self._var_summary.set('Loaded default configuration')
         else:
-            self._var_summary.set('No configuration loaded')
+            self._var_summary.set('No configuration loaded yet')
 
     def _on_file_leave(self):
         file_name = self._var_file.get()

@@ -171,6 +171,10 @@ class FitFrame(ttk.Frame, IStage):
     def stage_type_next(self):
         return self._stage_type_next
 
+    def stage_is_active(self) -> bool:
+        lfl = self._model.lfl
+        return lfl is not None and lfl.correction is not None
+
     def stage_invalidate(self):
         self._flash_stop()
 
@@ -241,6 +245,7 @@ class FitFrame(ttk.Frame, IStage):
                     self.stage_invalidate()
                     return
 
+                # if self._model.stage_is_active(self._stage_type_next):
                 if self._model.locs_3d is not None:
                     if self._model.cfg.show_graphs:
                         if self._model.cfg.show_result_graphs:
@@ -295,47 +300,49 @@ class FitFrame(ttk.Frame, IStage):
     def _ui_update_done(self):
         self._ui_update_start()
 
-        if self._model.lfl is not None:
-            if self._model.lfl.correction is not None:
-                self._model.stage_enabled(self._stage_type, True)
+        if self.stage_is_active():
+            self._model.stage_enabled(self._stage_type, True)
 
-                self._ui_autosave_dir_chb.configure(state=tk.NORMAL)
-                if self._var_autosave_dir_chb.get():
-                    self._ui_save_dir.configure(state=tk.NORMAL)
-                    self._ui_save_dir_btn.configure(state=tk.NORMAL)
-                else:
-                    self._ui_save_dir.configure(state=tk.DISABLED)
-                    self._ui_save_dir_btn.configure(state=tk.DISABLED)
-                self._ui_settings.configure(state=tk.NORMAL)
-                self._ui_start.configure(state=tk.NORMAL)
-
-        if self._model.locs_3d is not None:
+            self._ui_autosave_dir_chb.configure(state=tk.NORMAL)
             if self._var_autosave_dir_chb.get():
-                self._ui_save_as.configure(state=tk.DISABLED)
+                self._ui_save_dir.configure(state=tk.NORMAL)
+                self._ui_save_dir_btn.configure(state=tk.NORMAL)
             else:
-                self._ui_save_as.configure(state=tk.NORMAL)
-            self._ui_preview_occ.configure(state=tk.NORMAL)
-            self._ui_preview_hist.configure(state=tk.NORMAL)
-            self._ui_preview_3d.configure(state=tk.NORMAL)
+                self._ui_save_dir.configure(state=tk.DISABLED)
+                self._ui_save_dir_btn.configure(state=tk.DISABLED)
+            self._ui_settings.configure(state=tk.NORMAL)
+            self._ui_start.configure(state=tk.NORMAL)
 
-            points = self._model.locs_3d.shape[0]
-            frames = np.unique(self._model.locs_3d[:, 7]).shape[0]
-            views = int(np.sum(self._model.locs_3d[:, 5]))
-            fit_msg = (
-                f'Fitting completed with {points} 3D localisations,'
-                f' used {frames} frames and {views} 2D localisations in total')
-            if self._saved_path is not None:
-                self._var_summary.set(
-                    f'{fit_msg}.\n'
-                    f'Results saved to folder: "{self._saved_path.name}"')
+            # if self._model.stage_is_active(self._stage_type_next):
+            if self._model.locs_3d is not None:
+                if self._var_autosave_dir_chb.get():
+                    self._ui_save_as.configure(state=tk.DISABLED)
+                else:
+                    self._ui_save_as.configure(state=tk.NORMAL)
+                self._ui_preview_occ.configure(state=tk.NORMAL)
+                self._ui_preview_hist.configure(state=tk.NORMAL)
+                self._ui_preview_3d.configure(state=tk.NORMAL)
+
+                points = self._model.locs_3d.shape[0]
+                frames = np.unique(self._model.locs_3d[:, 7]).shape[0]
+                views = int(np.sum(self._model.locs_3d[:, 5]))
+                fit_msg = (
+                    f'Fitting completed with {points} 3D localisations,'
+                    f' used {frames} frames and {views} 2D localisations in total')
+                if self._saved_path is not None:
+                    self._var_summary.set(
+                        f'{fit_msg}.\n'
+                        f'Results saved to folder: "{self._saved_path.name}"')
+                else:
+                    self._var_summary.set(fit_msg)
             else:
-                self._var_summary.set(fit_msg)
+                if (self._update_thread_abort is not None
+                        and self._update_thread_abort.is_set()):
+                    self._var_summary.set('Fitting aborted')
+                else:
+                    self._var_summary.set('No fitting done')
         else:
-            if (self._update_thread_abort is not None
-                    and self._update_thread_abort.is_set()):
-                self._var_summary.set('Fitting aborted')
-            else:
-                self._var_summary.set('No fitting done')
+            self._var_summary.set('No fitting done yet')
 
         # Set progress bar full
         self._ui_progress.stop()

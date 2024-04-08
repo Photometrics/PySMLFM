@@ -104,6 +104,10 @@ class CorrectFrame(ttk.Frame, IStage):
     def stage_type_next(self):
         return self._stage_type_next
 
+    def stage_is_active(self) -> bool:
+        lfl = self._model.lfl
+        return lfl is not None and lfl.alpha_model is not None
+
     def stage_invalidate(self):
         self._flash_stop()
 
@@ -156,7 +160,7 @@ class CorrectFrame(ttk.Frame, IStage):
                     self.stage_invalidate()
                     return
 
-                if self._model.lfl.correction is not None:
+                if self._model.stage_is_active(self._stage_type_next):
                     if self._model.cfg.show_graphs:
                         if self._model.cfg.show_all_debug_graphs:
                             self._var_preview.set(1)
@@ -195,14 +199,13 @@ class CorrectFrame(ttk.Frame, IStage):
     def _ui_update_done(self):
         self._ui_update_start()
 
-        if self._model.lfl is not None:
-            if self._model.lfl.alpha_model is not None:
-                self._model.stage_enabled(self._stage_type, True)
+        if self.stage_is_active():
+            self._model.stage_enabled(self._stage_type, True)
 
-                self._ui_settings.configure(state=tk.NORMAL)
-                self._ui_start.configure(state=tk.NORMAL)
+            self._ui_settings.configure(state=tk.NORMAL)
+            self._ui_start.configure(state=tk.NORMAL)
 
-            if self._model.lfl.correction is not None:
+            if self._model.stage_is_active(self._stage_type_next):
                 self._ui_preview.configure(state=tk.NORMAL)
                 self._var_summary.set('Aberration corrected')
             else:
@@ -212,7 +215,7 @@ class CorrectFrame(ttk.Frame, IStage):
                 else:
                     self._var_summary.set('No correction done')
         else:
-            self._var_summary.set('No correction done')
+            self._var_summary.set('No correction done yet')
 
     def _flash_start(self):
         self._flash_stop()

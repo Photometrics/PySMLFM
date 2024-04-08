@@ -182,6 +182,9 @@ class CsvFrame(ttk.Frame, IStage):
     def stage_type_next(self):
         return self._stage_type_next
 
+    def stage_is_active(self) -> bool:
+        return self._model.cfg is not None
+
     def stage_invalidate(self):
         self._model.csv = None
         self._model.destroy_graph(GraphType.CSV_RAW)
@@ -221,13 +224,14 @@ class CsvFrame(ttk.Frame, IStage):
                     self.stage_invalidate()
                     return
 
-                if self._model.cfg.show_graphs:
-                    if self._model.cfg.show_all_debug_graphs:
-                        self._var_preview.set(1)
-                        self._on_preview()
+                if self._model.stage_is_active(self._stage_type_next):
+                    if self._model.cfg.show_graphs:
+                        if self._model.cfg.show_all_debug_graphs:
+                            self._var_preview.set(1)
+                            self._on_preview()
 
-                self._model.stage_ui_init(self._stage_type_next)
-                self._model.stage_start_update(self._stage_type_next)
+                    self._model.stage_ui_init(self._stage_type_next)
+                    self._model.stage_start_update(self._stage_type_next)
 
             self._model.invoke_on_gui_thread_async(_update_done)
 
@@ -263,7 +267,7 @@ class CsvFrame(ttk.Frame, IStage):
     def _ui_update_done(self):
         self._ui_update_start()
 
-        if self._model.cfg is not None:
+        if self.stage_is_active():
             self._model.stage_enabled(self._stage_type, True)
 
             self._ui_file_loc.configure(state=tk.NORMAL)
@@ -275,14 +279,16 @@ class CsvFrame(ttk.Frame, IStage):
                 self._ui_file_img_btn.configure(state=tk.NORMAL)
                 self._ui_peakfit.configure(state=tk.NORMAL)
 
-        if self._model.csv is not None:
-            self._ui_preview.configure(state=tk.NORMAL)
-            locs = self._model.csv.data.shape[0]
-            frames = np.unique(self._model.csv.data[:, 0]).shape[0]
-            self._var_summary.set(
-                f'Loaded {locs} localisations from {frames} frames')
+            if self._model.stage_is_active(self._stage_type_next):
+                self._ui_preview.configure(state=tk.NORMAL)
+                locs = self._model.csv.data.shape[0]
+                frames = np.unique(self._model.csv.data[:, 0]).shape[0]
+                self._var_summary.set(
+                    f'Loaded {locs} localisations from {frames} unique frames')
+            else:
+                self._var_summary.set('No localisations loaded')
         else:
-            self._var_summary.set('No localisations loaded')
+            self._var_summary.set('No localisations loaded yet')
 
     def _on_file_loc_leave(self):
         file_name = self._var_file_loc.get()

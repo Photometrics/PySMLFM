@@ -103,6 +103,12 @@ class FilterFrame(ttk.Frame, IStage):
     def stage_type_next(self):
         return self._stage_type_next
 
+    def stage_is_active(self) -> bool:
+        lfm = self._model.lfm
+        mla = self._model.mla
+        lfl = self._model.lfl
+        return lfm is not None and mla is not None and lfl is not None
+
     def stage_invalidate(self):
         self._flash_stop()
 
@@ -155,7 +161,7 @@ class FilterFrame(ttk.Frame, IStage):
                     self.stage_invalidate()
                     return
 
-                if self._model.lfl.alpha_model is not None:
+                if self._model.stage_is_active(self._stage_type_next):
                     if self._model.cfg.show_graphs:
                         if self._model.cfg.show_all_debug_graphs:
                             self._var_preview.set(1)
@@ -194,13 +200,13 @@ class FilterFrame(ttk.Frame, IStage):
     def _ui_update_done(self):
         self._ui_update_start()
 
-        if self._model.lfl is not None:
+        if self.stage_is_active():
             self._model.stage_enabled(self._stage_type, True)
 
             self._ui_settings.configure(state=tk.NORMAL)
             self._ui_start.configure(state=tk.NORMAL)
 
-            if self._model.lfl.alpha_model is not None:
+            if self._model.stage_is_active(self._stage_type_next):
                 self._ui_preview.configure(state=tk.NORMAL)
                 locs = self._model.lfl.locs_2d.shape[0]
                 count = locs - self._model.lfl.filtered_locs_2d.shape[0]
@@ -212,7 +218,7 @@ class FilterFrame(ttk.Frame, IStage):
                 else:
                     self._var_summary.set('No filtering done')
         else:
-            self._var_summary.set('No filtering done')
+            self._var_summary.set('No filtering done yet')
 
     def _flash_start(self):
         self._flash_stop()
