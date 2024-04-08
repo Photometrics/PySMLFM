@@ -93,7 +93,7 @@ def app():
     csv.read()
 
     print(f'Loaded {csv.data.shape[0]} localisations from'
-          f' {np.unique(csv.data[:, 0]).shape[0]} frames')
+          f' {np.unique(csv.data[:, 0]).shape[0]} unique frames')
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
         fig = smlfm.graphs.draw_locs_csv(plt.figure(), csv.data[:, 1:3])
