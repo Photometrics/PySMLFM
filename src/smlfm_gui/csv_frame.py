@@ -145,6 +145,8 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_file_loc.bind(
             '<FocusOut>', lambda _e: self._on_file_loc_leave())
         self._ui_file_loc_btn[COMMAND] = self._on_get_file_loc
+        self._ui_fmt_loc.bind(
+            '<FocusOut>', lambda _e: self._on_fmt_loc_leave())
         self._ui_open[COMMAND] = self._on_open
         if self._has_imagej:
             self._ui_file_img_btn[COMMAND] = self._on_get_file_img
@@ -335,6 +337,10 @@ class CsvFrame(ttk.Frame, IStage):
             self._var_file_res.set(str(csv_file))
             self._var_file_loc.set(str(csv_file))
             self._model.cfg.csv_file = csv_file
+
+    def _on_fmt_loc_leave(self):
+        fmt = self._var_fmt_loc.get()
+        self._model.cfg.csv_format = smlfm.LocalisationFile.Format[fmt]
 
     def _on_open(self):
         if self._model.cfg.csv_file is None:
