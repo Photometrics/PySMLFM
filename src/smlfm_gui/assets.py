@@ -77,9 +77,11 @@ class Icons:
 
         # Material icons
 
-        data = pkgutil.get_data(_pkg_name_, f'data/hive{mi_suffix}')
-        data = replace_color(data, color_app)
-        self.app = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        data = pkgutil.get_data(_pkg_name_, f'data/teledyne_rhomboid{mi_suffix}')
+        # Keep black or change to Teledyne Blue (#0076C0)
+        # data = replace_color(data, '#0076C0')
+        self.app = tksvg.SvgImage(data=data,
+                                  scale=self.svg_scale * 32.0 / self.default_size)
 
         data = pkgutil.get_data(_pkg_name_, f'data/folder_open{mi_suffix}')
         data = replace_color(data, color_any)
