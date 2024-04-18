@@ -8,9 +8,11 @@ from ..graphs import add_watermark
 def draw_histogram(fig: Figure,
                    photons: npt.NDArray[float],
                    axial_err: npt.NDArray[float],
+                   set_default_size: bool = True
                    ) -> Figure:
     fig.clear(True)
-    fig.set_size_inches(6, 5)
+    if set_default_size:
+        fig.set_size_inches(6, 5)
     fig.set_layout_engine('tight')
 
     ax: Axes = fig.add_subplot()

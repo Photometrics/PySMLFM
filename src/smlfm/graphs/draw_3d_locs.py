@@ -5,9 +5,13 @@ from mpl_toolkits.mplot3d.axes3d import Axes3D
 from ..graphs import add_watermark
 
 
-def draw_3d_locs(fig: Figure, xyz: npt.NDArray[float]) -> Figure:
+def draw_3d_locs(fig: Figure,
+                 xyz: npt.NDArray[float],
+                 set_default_size: bool = True
+                 ) -> Figure:
     fig.clear(True)
-    fig.set_size_inches(5, 5)
+    if set_default_size:
+        fig.set_size_inches(5, 5)
     fig.set_layout_engine('tight')
 
     ax: Axes3D = fig.add_subplot(projection='3d')

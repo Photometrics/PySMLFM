@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -14,11 +14,13 @@ from ..graphs import add_watermark
 def draw_locs(fig: Figure,
               xy: npt.NDArray[float],
               lens_idx: npt.NDArray[float],
-              lens_centres: Union[npt.NDArray[float], None] = None,
-              mla_centre: Union[npt.NDArray[float], None] = None
+              lens_centres: Optional[npt.NDArray[float]] = None,
+              mla_centre: Optional[npt.NDArray[float]] = None,
+              set_default_size: bool = True
               ) -> Figure:
     fig.clear(True)
-    fig.set_size_inches(6, 5)
+    if set_default_size:
+        fig.set_size_inches(6, 5)
     fig.set_layout_engine('tight')
 
     ax: Axes = fig.add_subplot()

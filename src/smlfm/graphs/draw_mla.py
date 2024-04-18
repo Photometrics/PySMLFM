@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional
 
 import numpy.typing as npt
 from matplotlib.axes import Axes
@@ -9,10 +9,12 @@ from ..graphs import add_watermark
 
 def draw_mla(fig: Figure,
              lens_centres: npt.NDArray[float],
-             mla_centre: Union[npt.NDArray[float], None] = None
+             mla_centre: Optional[npt.NDArray[float]] = None,
+             set_default_size: bool = True
              ) -> Figure:
     fig.clear(True)
-    fig.set_size_inches(5, 5)
+    if set_default_size:
+        fig.set_size_inches(5, 5)
     fig.set_layout_engine('tight')
 
     ax: Axes = fig.add_subplot()

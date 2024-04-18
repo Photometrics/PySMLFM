@@ -5,9 +5,13 @@ from matplotlib.figure import Figure
 from ..graphs import add_watermark
 
 
-def draw_locs_csv(fig: Figure, locs: npt.NDArray[float]) -> Figure:
+def draw_locs_csv(fig: Figure,
+                  locs: npt.NDArray[float],
+                  set_default_size: bool = True
+                  ) -> Figure:
     fig.clear(True)
-    fig.set_size_inches(5, 5)
+    if set_default_size:
+        fig.set_size_inches(5, 5)
     fig.set_layout_engine('tight')
 
     ax: Axes = fig.add_subplot()
