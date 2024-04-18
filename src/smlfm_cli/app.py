@@ -33,16 +33,6 @@ def app():
 
     # 1. Prepare configuration
 
-    # Uncomment to override
-    # cfg_file = Path('PySMLFM_testdata/default-config.json')
-
-    # Uncomment to override
-    # csv_file = Path('PySMLFM_testdata/example_data_bcr_fixed_bcell - PART-50.csv')  # ~190 kB
-    # csv_file = Path('PySMLFM_testdata/example_data_bcr_fixed_bcell - PART-500.csv')  # ~1.8 MB
-    # csv_file = Path('PySMLFM_testdata/example_data_bcr_fixed_bcell - PART-1000.csv')  # ~3.7 MB
-    # csv_file = Path('PySMLFM_testdata/example_data_bcr_fixed_bcell - FULL.csv')  # ~ 17 MB
-    # csv_file = Path('PySMLFM_testdata/2D Fitting Data - HUGE.csv')  # ~ 110 MB
-
     if cfg_file is not None:
         with open(cfg_file, 'rt') as file:
             cfg_dump = file.read()
@@ -62,21 +52,6 @@ def app():
     if not cfg.csv_file.exists():
         print(f'ERROR: The CSV file "{cfg.csv_file}" does not exist')
         sys.exit(2)
-
-    # Uncomment to override
-    # cfg.mla_centre = np.array([np.sqrt(3.0) / 2, 0.5])
-    # cfg.mla_centre = np.array([np.sqrt(3.0), 1.0])
-    # cfg.mla_centre = np.array([0.0, 1.0])
-    # cfg.mla_centre = np.array([np.sqrt(3.0), 2.0])
-
-    # Uncomment to override
-    # cfg.mla_offset = np.array([-7.1, 1.0])
-
-    # Uncomment to override
-    # cfg.save_dir = None
-
-    # Uncomment to override
-    # cfg.confirm_mla_alignment = False
 
     lfm = smlfm.FourierMicroscope(
         cfg.num_aperture, cfg.mla_lens_pitch,
