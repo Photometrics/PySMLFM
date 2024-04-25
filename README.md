@@ -58,6 +58,13 @@ You can also `pip install pyimagej`, but will then need to install
    If you don't want PyImageJ, remove last two package names from the command
    to get clean environment.<br>
    Adjust Python version if needed.
+   > [!NOTE]
+   > If you have an AMD processor and experience low performance compared to
+   > similar Intel CPU, installing an alternative BLAS library could help.
+   > For example, to initialize new environment with BLIS library run:
+   > ```
+   > (base) C:\Users\Me> mamba create -n MyEnv -c conda-forge python=3.8 pyimagej openjdk=8 blas=*=blis
+   > ```
 4. Whenever you want to use _MyEnv_ environment, activate it first:
    ```
    (base) C:\Users\Me> mamba activate MyEnv
