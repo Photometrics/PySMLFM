@@ -56,7 +56,12 @@ class OutputFiles:
             f'    locs_3d = Path(__file__).parent.absolute() / "{self.CSV_FILE_NAME}"\n'
             f'    max_lat_err = {self.cfg.show_max_lateral_err}\n'
             f'    min_views = {self.cfg.show_min_view_count}\n'
-            f'    smlfm.graphs.reconstruct_results(locs_3d, max_lat_err, min_views)\n'
+            f'    fig1, fig2, fig3 = smlfm.graphs.reconstruct_results(\n'
+            f'        plt.figure(), plt.figure(), plt.figure(),\n'
+            f'        locs_3d, max_lat_err, min_views)\n'
+            f'    fig1.canvas.manager.set_window_title("Occurrences")\n'
+            f'    fig2.canvas.manager.set_window_title("Histogram")\n'
+            f'    fig3.canvas.manager.set_window_title("3D")\n'
             f'    plt.show()\n'
         )
         with open(self.folder / self.FIGURES_FILE_NAME, 'wt') as file:
