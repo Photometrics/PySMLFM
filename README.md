@@ -58,7 +58,8 @@ You can also `pip install pyimagej`, but will then need to install
    If you don't want PyImageJ, remove last two package names from the command
    to get clean environment.<br>
    Adjust Python version if needed.
-   > [!NOTE]
+
+   > Note:<br>
    > If you have an AMD processor and experience low performance compared to
    > similar Intel CPU, installing an alternative BLAS library could help.
    > For example, to initialize new environment with BLIS library run:
