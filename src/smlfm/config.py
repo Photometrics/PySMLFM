@@ -85,10 +85,10 @@ class Config:
         'Filter out all localizations with distance to origin\n'
         'lying outside given min,max range (in normalised pupil coordinates).')
     filter_rhos: Optional[Tuple[float, float]] = None
-    _filter_spot_size_doc: str = (
+    _filter_spot_sizes_doc: str = (
         'Filter out all localizations with spot size\n'
         'lying outside given min,max range (in microns).')
-    filter_spot_size: Optional[Tuple[float, float]] = None
+    filter_spot_sizes: Optional[Tuple[float, float]] = None
     _filter_photons_doc: str = (
         'Filter out all localizations with background intensity\n'
         'lying outside given min,max range (in photons).')
@@ -265,7 +265,7 @@ class Config:
                 cfg.__setattr__(field.name, np.array(value))
             elif (False  # field.type is Tuple  # Tuple is deserialized to list
                   or field.name == 'filter_rhos'
-                  or field.name == 'filter_spot_size'
+                  or field.name == 'filter_spot_sizes'
                   or field.name == 'filter_photons'):
                 if value is not None:
                     cfg.__setattr__(field.name, tuple(value))

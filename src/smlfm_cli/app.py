@@ -152,8 +152,8 @@ def app():
         lfl.filter_lenses(mla, lfm)
     if cfg.filter_rhos is not None:
         lfl.filter_rhos(cfg.filter_rhos)
-    if cfg.filter_spot_size is not None:
-        lfl.filter_spot_sizes(cfg.filter_spot_size)
+    if cfg.filter_spot_sizes is not None:
+        lfl.filter_spot_sizes(cfg.filter_spot_sizes)
     if cfg.filter_photons is not None:
         lfl.filter_photons(cfg.filter_photons)
 

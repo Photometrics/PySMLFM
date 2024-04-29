@@ -295,8 +295,8 @@ class FilterFrame(ttk.Frame, IStage):
             self._model.lfl.filter_lenses(self._model.mla, self._model.lfm)
         if self._model.cfg.filter_rhos is not None:
             self._model.lfl.filter_rhos(self._model.cfg.filter_rhos)
-        if self._model.cfg.filter_spot_size is not None:
-            self._model.lfl.filter_spot_sizes(self._model.cfg.filter_spot_size)
+        if self._model.cfg.filter_spot_sizes is not None:
+            self._model.lfl.filter_spot_sizes(self._model.cfg.filter_spot_sizes)
         if self._model.cfg.filter_photons is not None:
             self._model.lfl.filter_photons(self._model.cfg.filter_photons)
 
