@@ -148,11 +148,14 @@ def app():
 
     tic = time.time()
 
-    lfl.reset_filtered_locs()
-    # TODO: Add variable number of filtering parameters to Config
-    # lfl.filter_rhos([0.0, 0.8])
-    # lfl.filter_spot_sizes([0.1, 1.0])
-    # lfl.filter_photons([0.0, 500.0])
+    if cfg.filter_lenses:
+        lfl.filter_lenses(mla, lfm)
+    if cfg.filter_rhos is not None:
+        lfl.filter_rhos(cfg.filter_rhos)
+    if cfg.filter_spot_size is not None:
+        lfl.filter_spot_sizes(cfg.filter_spot_size)
+    if cfg.filter_photons is not None:
+        lfl.filter_photons(cfg.filter_photons)
 
     lfl.init_alpha_uv(cfg.alpha_model, lfm, worker_count=cfg.max_workers)
 
@@ -186,7 +189,6 @@ def app():
     # with np.printoptions(precision=6, suppress=True):
     #     print(f'{correction}')
 
-    lfl.reset_correction()
     lfl.correct_xy(correction)
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:

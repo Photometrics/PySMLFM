@@ -291,10 +291,14 @@ class FilterFrame(ttk.Frame, IStage):
             self._var_summary.set, 'Filtering...')
         tic = time.time()
 
-        # TODO: Add variable number of filtering parameters to Config and GUI
-        # self._model.lfl.filter_rhos([0.0, 0.8])
-        # self._model.lfl.filter_spot_sizes([0.1, 1.0])
-        # self._model.lfl.filter_photons([0.0, 500.0])
+        if self._model.cfg.filter_lenses:
+            self._model.lfl.filter_lenses(self._model.mla, self._model.lfm)
+        if self._model.cfg.filter_rhos is not None:
+            self._model.lfl.filter_rhos(self._model.cfg.filter_rhos)
+        if self._model.cfg.filter_spot_size is not None:
+            self._model.lfl.filter_spot_sizes(self._model.cfg.filter_spot_size)
+        if self._model.cfg.filter_photons is not None:
+            self._model.lfl.filter_photons(self._model.cfg.filter_photons)
 
         self._model.lfl.init_alpha_uv(
             self._model.cfg.alpha_model,
@@ -304,6 +308,7 @@ class FilterFrame(ttk.Frame, IStage):
 
         if self._update_thread_abort is not None:
             if self._update_thread_abort.is_set():
+                self._model.lfl.reset_filtered_locs()
                 return
 
         if self._model.cfg.log_timing:

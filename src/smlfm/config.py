@@ -77,6 +77,22 @@ class Config:
         'A camera pixel size (in microns).')
     pixel_size_camera: float = 16.0
 
+    _filter_lenses_doc: str = (
+        'Filter out all localizations mapped to the lenses with center\n'
+        'lying outside the back focal plane.')
+    filter_lenses: bool = True
+    _filter_rhos_doc: str = (
+        'Filter out all localizations with distance to origin\n'
+        'lying outside given min,max range (in normalised pupil coordinates).')
+    filter_rhos: Optional[Tuple[float, float]] = None
+    _filter_spot_size_doc: str = (
+        'Filter out all localizations with spot size\n'
+        'lying outside given min,max range (in microns).')
+    filter_spot_size: Optional[Tuple[float, float]] = None
+    _filter_photons_doc: str = (
+        'Filter out all localizations with background intensity\n'
+        'lying outside given min,max range (in photons).')
+    filter_photons: Optional[Tuple[float, float]] = None
     _alpha_model_doc: str = (
         'A model used for mapping.\n'
         'Supported values: \'LINEAR\', \'SPHERE\', \'INTEGRATE_SPHERE\'.')
@@ -247,6 +263,12 @@ class Config:
                   or field.name == 'mla_centre'
                   or field.name == 'mla_offset'):
                 cfg.__setattr__(field.name, np.array(value))
+            elif (False  # field.type is Tuple  # Tuple is deserialized to list
+                  or field.name == 'filter_rhos'
+                  or field.name == 'filter_spot_size'
+                  or field.name == 'filter_photons'):
+                if value is not None:
+                    cfg.__setattr__(field.name, tuple(value))
             elif field.type is Fitting.FitParams:
                 cfg.__setattr__(field.name, Fitting.FitParams(**value))
             elif field.type is Fitting.AberrationParams:

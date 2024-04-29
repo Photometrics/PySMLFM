@@ -56,7 +56,7 @@ class Localisations:
         INTEGRATE_SPHERE = 3
 
     def __init__(self,
-                 locs_2d_csv: npt.NDArray[float],
+                 locs_2d_csv: npt.NDArray[float]
                  ):
         """Constructs light field localisation data object.
 
@@ -80,7 +80,6 @@ class Localisations:
         self.alpha_model: Union[Localisations.AlphaModel, None] = None
         self.corrected_locs_2d: Union[npt.NDArray[float], None] = None
         self.correction: Union[npt.NDArray[float], None] = None
-        self.reset_filtered_locs()
 
     def assign_to_lenses(self,
                          mla: MicroLensArray,
@@ -97,8 +96,7 @@ class Localisations:
         xy = self.locs_2d[:, 3:5].copy()
         xy *= lfm.xy_to_uv_scale
 
-        lens_centres = mla.lens_centres.copy()
-        lens_centres -= mla.centre
+        lens_centres = mla.lens_centres - mla.centre
         lens_centres *= lfm.mla_to_uv_scale
 
         knn = NearestNeighbors(n_neighbors=1).fit(lens_centres)
@@ -106,6 +104,8 @@ class Localisations:
 
         self.locs_2d[:, 1:3] = lens_centres[lens_indices, :][:, 0, :]  # U, V
         self.locs_2d[:, 12] = lens_indices[:, 0]
+
+        self.reset_filtered_locs()
 
     def _filter(self,
                 filter_range: Tuple[float, float],
@@ -118,8 +118,21 @@ class Localisations:
     def reset_filtered_locs(self) -> None:
         self.filtered_locs_2d = self.locs_2d.copy()
         self.alpha_model = None
-        self.corrected_locs_2d = None
-        self.correction = None
+        self.reset_correction()
+
+    def filter_lenses(self,
+                      mla: MicroLensArray,
+                      lfm: FourierMicroscope
+                      ) -> None:
+        radius = lfm.bfp_radius / mla.lens_pitch
+        radius_sq = radius ** 2
+        centres = mla.lens_centres - mla.centre
+        distance_sq = np.sum(centres ** 2, axis=1)
+        lens_indices = np.nonzero(distance_sq < radius_sq)[0]
+
+        index = self.filtered_locs_2d[:, 12]
+        sel = np.any(index[:, None] == lens_indices, axis=-1)
+        self.filtered_locs_2d = self.filtered_locs_2d[sel, :]
 
     def filter_rhos(self,
                     filter_range: Tuple[float, float]
@@ -165,6 +178,8 @@ class Localisations:
         alpha_uv = self.filtered_locs_2d[:, 10:12]
         na = lfm.num_aperture
         n = lfm.ref_idx_medium
+
+        self.reset_correction()
 
         if model == Localisations.AlphaModel.LINEAR:
             alpha_uv[:] = uv
