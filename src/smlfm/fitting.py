@@ -62,7 +62,7 @@ class Fitting:
                         abort_event: Union[mp.Event, None] = None,
                         progress_func: Union[Callable[[int, int, int], None], None] = None,
                         progress_step: int = 1000,
-                        worker_count: Union[int, None] = None
+                        worker_count: int = 0
                         ) -> Tuple[npt.NDArray[float], List[FitData]]:
         """TODO: Add documentation.
 
@@ -86,9 +86,9 @@ class Fitting:
                 Defines how often is the `progress_func` function called, if set.
                 The frames are processed in groups of 100 frames which is also
                 the lowest value.
-            worker_count (Union[int, None]):
+            worker_count (int):
                 It is the number of worker processes to run in parallel.
-                If it is None then the number returned by `os.cpu_count()` is used.
+                If it is 0 or less, the number returned by `os.cpu_count()` is used.
 
         Returns:
             Returns a tuple.
@@ -122,7 +122,7 @@ class Fitting:
         frames_per_task = 100
         task_count = int((frame_count + frames_per_task - 1) / frames_per_task)
 
-        if (worker_count is not None and worker_count <= 1) or task_count == 1:
+        if worker_count == 1 or task_count == 1:
             return Fitting._light_field_fit_task(
                 locs_2d, rho_scaling, fit_params, abort_event)
 
@@ -132,7 +132,8 @@ class Fitting:
         frame = min_frame
         progress_next_frame = min_frame + progress_step
 
-        with mp.Pool(processes=worker_count) as pool:
+        processes = worker_count if worker_count > 0 else None
+        with mp.Pool(processes=processes) as pool:
             procs = [Union[mp.Process, None]] * task_count
 
             for idx in range(task_count):

@@ -108,6 +108,6 @@
     "confirm_mla_alignment": true,
     "_log_timing_doc": "Print timing messages to console for all lengthy operations.",
     "log_timing": true,
-    "_max_workers_doc": "Limit the number of parallel workers used to speed up some computations.\nIf set to 'null', all CPUs in the system are used.\nIf set to value 1 or less, only one worker is used.",
-    "max_workers": null
+    "_max_workers_doc": "Limit the number of parallel workers used to speed up some computations.\nIf set to zero or less all CPUs in the system are used.",
+    "max_workers": 0
 }

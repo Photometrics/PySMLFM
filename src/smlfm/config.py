@@ -3,7 +3,7 @@ import json
 from dataclasses import dataclass, fields
 from enum import Enum
 from pathlib import Path, PurePath
-from typing import Union
+from typing import Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -19,11 +19,11 @@ class Config:
     _csv_file_doc: str = (
         'A path to CSV file with localisations.\n'
         'A CLI application requires this to be a valid path to existing file.\n'
-        'A GUI application can call PeakFit plugin from ImageJ and use this\n'
-        'path to say ImageJ where to store the PeakFit output.\n'
+        'A GUI application can call PeakFit plugin from Fiji and use this\n'
+        'path to say Fiji where to store the PeakFit output.\n'
         'The \'null\' value is allowed only when loading from JSON to allow\n'
         'the application ask user interactively.')
-    csv_file: Union[Path, None] = None
+    csv_file: Optional[Path] = None
     _csv_format_doc: str = (
         'A format of CSV file with localisations.\n'
         'Supported values: \'PEAKFIT\', \'THUNDERSTORM\', \'PICASSO\'.')
@@ -164,7 +164,7 @@ class Config:
         'Save the results to a new sub-folder under this directory.\n'
         'If set to \'null\' or empty string, nothing is saved.\n'
         'Defaults to current working directory.')
-    save_dir: Union[Path, None] = Path()
+    save_dir: Optional[Path] = Path()
 
     _show_graphs_doc: str = (
         'Show various graphs, a global switch.\n'
@@ -183,10 +183,10 @@ class Config:
 
     _show_max_lateral_err_doc: str = (
         'In result graphs show only points with lateral error below this value.')
-    show_max_lateral_err: Union[float, None] = None
+    show_max_lateral_err: Optional[float] = None
     _show_min_view_count_doc: str = (
         'In result graphs show only points with view count below this value.')
-    show_min_view_count: Union[int, None] = None
+    show_min_view_count: Optional[int] = None
 
     _confirm_mla_alignment_doc: str = (
         'Ask the user to confirm the data and MLA alignment.\n'
@@ -199,9 +199,8 @@ class Config:
 
     _max_workers_doc: str = (
         'Limit the number of parallel workers used to speed up some computations.\n'
-        'If set to \'null\', all CPUs in the system are used.\n'
-        'If set to value 1 or less, only one worker is used.')
-    max_workers: int = None
+        'If set to zero or less all CPUs in the system are used.')
+    max_workers: int = 0
 
     def to_json(self, **kwargs):
         indent = kwargs.pop('indent', 4)  # Indent with 4 spaces by default
@@ -236,7 +235,7 @@ class Config:
             value = getattr(cfg, field.name)
             if field.type is Path and value is not None:
                 cfg.__setattr__(field.name, Path(value))
-            elif field.type is Union[Path, None] and value is not None:
+            elif field.type is Optional[Path] and value is not None:
                 cfg.__setattr__(field.name, Path(value))
             elif field.type is LocalisationFile.Format:
                 cfg.__setattr__(field.name, LocalisationFile.Format[value])
@@ -244,7 +243,7 @@ class Config:
                 cfg.__setattr__(field.name, Localisations.AlphaModel[value])
             elif field.type is MicroLensArray.LatticeType:
                 cfg.__setattr__(field.name, MicroLensArray.LatticeType[value])
-            elif (field.type is np.ndarray  # NDArray is deserialized to list
+            elif (False  # field.type is np.ndarray  # NDArray is deserialized to list
                   or field.name == 'mla_centre'
                   or field.name == 'mla_offset'):
                 cfg.__setattr__(field.name, np.array(value))

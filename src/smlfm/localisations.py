@@ -145,7 +145,7 @@ class Localisations:
                       model: AlphaModel,
                       lfm: FourierMicroscope,
                       abort_event: Union[mp.Event, None] = None,
-                      worker_count: Union[int, None] = None
+                      worker_count: int = 0
                       ) -> None:
         """TODO: Add documentation.
 
@@ -156,9 +156,9 @@ class Localisations:
             abort_event (Union[mp.Event, None]):
                 An event to be periodically checked (without blocking).
                 If set, the processing is aborted and function returns.
-            worker_count (Union[int, None]):
+            worker_count (int):
                 It is the number of worker processes to run in parallel.
-                If it is None then the number returned by `os.cpu_count()` is used.
+                If it is 0 or less, the number returned by `os.cpu_count()` is used.
         """
 
         uv = self.filtered_locs_2d[:, 1:3]
@@ -225,7 +225,7 @@ class Localisations:
                               m: int,
                               alpha_uv: npt.NDArray[float],
                               abort_event: Union[mp.Event, None] = None,
-                              worker_count: Union[int, None] = None
+                              worker_count: int = 0
                               ) -> None:
         """TODO: Add documentation."""
 
@@ -233,7 +233,7 @@ class Localisations:
         row_count = uv.shape[0]
         task_count = int((row_count + rows_per_task - 1) / rows_per_task)
 
-        if (worker_count is not None and worker_count <= 1) or task_count == 1:
+        if worker_count == 1 or task_count == 1:
             Localisations._phase_average_sphere_fn(
                 range(row_count), uv, uv_scaling, na, n, m,
                 alpha_uv, abort_event)
@@ -257,7 +257,8 @@ class Localisations:
         uv_data[:] = uv
 
         try:
-            with mp.Pool(processes=worker_count) as pool:
+            processes = worker_count if worker_count > 0 else None
+            with mp.Pool(processes=processes) as pool:
                 procs = [Union[mp.Process, None]] * task_count
 
                 for idx in range(task_count):
