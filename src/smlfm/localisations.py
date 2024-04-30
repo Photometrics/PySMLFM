@@ -189,7 +189,7 @@ class Localisations:
             dr_sq = 1 - rho * (na / n)**2  # TODO: REVIEW! Should we use (rho**2) here?
             dr_sq[dr_sq < 0.0] = np.nan  # No negative numbers for sqrt
             phi = -(na / n) / np.sqrt(dr_sq)
-            alpha_uv[:] = uv * phi
+            alpha_uv[:] = uv * phi[:, np.newaxis]
 
         elif model == Localisations.AlphaModel.INTEGRATE_SPHERE:
             uv_scaling = lfm.mla_to_uv_scale
