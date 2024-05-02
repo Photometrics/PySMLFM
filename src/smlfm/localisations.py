@@ -137,10 +137,9 @@ class Localisations:
     def filter_rhos(self,
                     filter_range: Tuple[float, float]
                     ) -> None:
-        u = self.filtered_locs_2d[:, 1]
-        v = self.filtered_locs_2d[:, 2]
-        rho = np.sqrt(u**2 + v**2)
-        self._filter(filter_range, rho)
+        uv = self.filtered_locs_2d[:, 1:3]
+        rhos = np.sqrt(np.sum(uv ** 2, axis=1))
+        self._filter(filter_range, rhos)
 
     def filter_spot_sizes(self,
                           filter_range: Tuple[float, float]
