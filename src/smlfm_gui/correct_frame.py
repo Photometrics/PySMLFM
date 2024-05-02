@@ -6,7 +6,7 @@ import traceback as tb
 from idlelib.tooltip import Hovertip
 from threading import Thread
 from tkinter import messagebox, ttk
-from typing import Union
+from typing import Optional
 
 import numpy as np
 from matplotlib.figure import Figure
@@ -15,6 +15,7 @@ import smlfm
 
 from .app_model import AppModel, IStage
 from .consts import *
+from .correct_cfg_dialog import CorrectCfgDialog
 from .figure_window import FigureWindow
 
 
@@ -88,9 +89,13 @@ class CorrectFrame(ttk.Frame, IStage):
         self._var_preview = tk.IntVar()
         self._ui_preview[VARIABLE] = self._var_preview
 
-        self._update_thread: Union[Thread, None] = None
-        self._update_thread_err: Union[str, None] = None
-        self._update_thread_abort: Union[mp.Event, None] = None
+        self._update_thread: Optional[Thread] = None
+        self._update_thread_err: Optional[str] = None
+        self._update_thread_abort: Optional[mp.Event] = None
+
+        self._settings_dlg: Optional[CorrectCfgDialog] = None
+        self._settings_apply: bool = False
+        self._update_from_settings: bool = False
 
         # =0 ~ disabled, >0 ~ remaining flashes, None ~ infinite
         self._flash_counter = 0
@@ -113,7 +118,9 @@ class CorrectFrame(ttk.Frame, IStage):
 
         if self._model.lfl is not None:
             self._model.lfl.reset_correction()
-        self._model.destroy_graph(GraphType.CORRECTED)
+
+        if not self._update_from_settings:
+            self._model.destroy_graph(GraphType.CORRECTED)
 
         self._model.stage_enabled(self._stage_type, False)
 
@@ -157,21 +164,28 @@ class CorrectFrame(ttk.Frame, IStage):
                         title='Correction Error',
                         message=f'The aberration cannot be corrected:\n{err}')
 
+                    self._settings_apply = False
+                    self._update_from_settings = False
+
                     self.stage_invalidate()
                     return
 
                 if self._model.stage_is_active(self._stage_type_next):
-                    if self._model.cfg.show_graphs:
-                        if self._model.cfg.show_all_debug_graphs:
-                            self._var_preview.set(1)
-                            self._on_preview()
+
+                    self._show_previews(force_update=True)
 
                     self._model.stage_ui_init(self._stage_type_next)
                     # Next phase updates automatically or the user continues manually
-                    if self._model.cfg.confirm_mla_alignment:
+                    if self._update_from_settings:
                         self._model.stage_ui_flash(self._stage_type_next)
                     else:
-                        self._model.stage_start_update(self._stage_type_next)
+                        if self._model.cfg.confirm_mla_alignment:
+                            self._model.stage_ui_flash(self._stage_type_next)
+                        else:
+                            self._model.stage_start_update(self._stage_type_next)
+
+                self._settings_apply = False
+                self._update_from_settings = False
 
             self._model.invoke_on_gui_thread_async(_update_done)
 
@@ -193,6 +207,10 @@ class CorrectFrame(ttk.Frame, IStage):
 
     def _ui_update_start(self):
         self._ui_settings.configure(state=tk.DISABLED)
+        if self._update_from_settings:
+            settings_dlg = self._settings_dlg
+            if settings_dlg is not None:
+                settings_dlg.enable(False)
         self._ui_start.configure(state=tk.DISABLED)
         self._ui_preview.configure(state=tk.DISABLED)
 
@@ -203,6 +221,10 @@ class CorrectFrame(ttk.Frame, IStage):
             self._model.stage_enabled(self._stage_type, True)
 
             self._ui_settings.configure(state=tk.NORMAL)
+            if self._update_from_settings:
+                settings_dlg = self._settings_dlg
+                if settings_dlg is not None:
+                    settings_dlg.enable(True)
             self._ui_start.configure(state=tk.NORMAL)
 
             if self._model.stage_is_active(self._stage_type_next):
@@ -242,9 +264,28 @@ class CorrectFrame(ttk.Frame, IStage):
         self._var_start.set(0)
 
     def _on_settings(self):
-        messagebox.showinfo(
-            title='Notice',
-            message='The settings UI is not implemented yet.')
+        cfg_dump_old = self._model.cfg.to_json()
+
+        def _process_cb(apply: bool):
+            self._settings_apply = apply
+            self._update_from_settings = True
+            nonlocal cfg_dump_old
+            cfg_dump_new = self._model.cfg.to_json()
+            if (cfg_dump_old != cfg_dump_new
+                    or not self._model.stage_is_active(self._stage_type_next)):
+                cfg_dump_old = cfg_dump_new
+                self.stage_start_update()
+            else:
+                self._show_previews()
+                self._settings_apply = False
+                self._update_from_settings = False
+
+        self._settings_dlg = CorrectCfgDialog(self, self._model, process_cb=_process_cb)
+        self._settings_dlg.show_modal()
+        self._settings_dlg = None
+        if not self._var_preview.get():
+            self._settings_apply = False
+            self._update_from_settings = False
         self._var_settings.set(0)
 
     def _on_start(self):
@@ -260,22 +301,44 @@ class CorrectFrame(ttk.Frame, IStage):
             self._flash_stop()
             self.stage_start_update()
 
-    def _on_preview(self):
-        wnd = self._model.graphs[GraphType.CORRECTED]
-        if wnd is None:
-            fig = smlfm.graphs.draw_locs(
-                Figure(),
+    def _show_previews(self, force_update: bool = False):
+        if not self._model.stage_is_active(self._stage_type_next):
+            return
+
+        show = self._model.cfg.show_graphs and self._model.cfg.show_all_debug_graphs
+
+        force_show = show or self._settings_apply
+        force_update = force_update and self._model.graph_exists(GraphType.CORRECTED)
+        if force_show:
+            self._var_preview.set(1)
+        if force_show or force_update:
+            self._on_preview(force_update)
+
+    def _on_preview(self, force_update: bool = False):
+
+        def draw(f: Figure, set_size: bool = True) -> Figure:
+            return smlfm.graphs.draw_locs(
+                f,
                 xy=self._model.lfl.corrected_locs_2d[:, 3:5],
                 lens_idx=self._model.lfl.corrected_locs_2d[:, 12],
                 lens_centres=((self._model.mla.lens_centres - self._model.mla.centre)
                               * self._model.lfm.mla_to_xy_scale),
                 # U,V values are around MLA centre but that offset is not included
-                mla_centre=np.array([0.0, 0.0]))
+                mla_centre=np.array([0.0, 0.0]),
+                set_default_size=set_size)
+
+        wnd = self._model.graphs[GraphType.CORRECTED]
+        if wnd is None:
+            fig = draw(Figure())
             wnd = FigureWindow(fig, master=self,
                                title='Corrected localisations')
             wnd.bind('<Map>', func=lambda _evt: self._var_preview.set(1))
             wnd.bind('<Unmap>', func=lambda _evt: self._var_preview.set(0))
             self._model.graphs[GraphType.CORRECTED] = wnd
+        else:
+            if force_update:
+                draw(wnd.figure, set_size=False)
+                wnd.refresh()
 
         if self._var_preview.get():
             wnd.deiconify()
@@ -318,7 +381,16 @@ class CorrectFrame(ttk.Frame, IStage):
             fit_data,
             self._model.cfg.aberration_params)
 
+        if self._update_thread_abort is not None:
+            if self._update_thread_abort.is_set():
+                return
+
         self._model.lfl.correct_xy(correction)
+
+        if self._update_thread_abort is not None:
+            if self._update_thread_abort.is_set():
+                self._model.lfl.reset_correction()
+                return
 
         if self._model.cfg.log_timing:
             print(f'Aberration correction took {1e3 * (time.time() - tic):.3f} ms')

@@ -8,6 +8,7 @@ from ..graphs import add_watermark
 def draw_histogram(fig: Figure,
                    photons: npt.NDArray[float],
                    axial_err: npt.NDArray[float],
+                   bins: int = 40,
                    set_default_size: bool = True
                    ) -> Figure:
     fig.clear(True)
@@ -18,7 +19,7 @@ def draw_histogram(fig: Figure,
     ax: Axes = fig.add_subplot()
     ax.set_xlabel('Photons')
     ax.set_ylabel('Axial precision [nm]')
-    gr = ax.hist2d(photons, axial_err * 1000, bins=40)
+    gr = ax.hist2d(photons, axial_err * 1000, bins=bins)
 
     cbar = fig.colorbar(gr[3], ax=ax)
     cbar.set_label('Number of localisations')

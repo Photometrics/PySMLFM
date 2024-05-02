@@ -11,6 +11,7 @@ import smlfm
 
 from .app_model import AppModel, IStage
 from .consts import *
+from .config_cfg_dialog import ConfigCfgDialog
 
 
 class ConfigFrame(ttk.Frame, IStage):
@@ -87,7 +88,7 @@ class ConfigFrame(ttk.Frame, IStage):
                                    image=self._model.icons.save_as,
                                    compound=tk.LEFT)
         self._ui_settings[IMAGE] = self._model.icons.settings
-        self._ui_settings_tip.text = 'Edit extra settings'
+        self._ui_settings_tip.text = 'Edit common settings'
 
         # Hooks
         self._ui_file.bind(
@@ -111,6 +112,12 @@ class ConfigFrame(ttk.Frame, IStage):
         self._update_thread: Union[Thread, None] = None
         self._update_thread_err: Union[str, None] = None
 
+        self._cli_overrides: bool = True  # Resets after first update
+
+        self._settings_dlg: Union[ConfigCfgDialog, None] = None
+        self._settings_apply: bool = False
+        self._update_from_settings: bool = False
+
         self.stage_ui_init()
 
     def stage_type(self):
@@ -123,7 +130,8 @@ class ConfigFrame(ttk.Frame, IStage):
         return True
 
     def stage_invalidate(self):
-        self._model.cfg = None
+        if not self._update_from_settings:
+            self._model.cfg = None
 
         self._model.stage_enabled(self._stage_type, False)
 
@@ -160,13 +168,26 @@ class ConfigFrame(ttk.Frame, IStage):
                         message=f'The configuration cannot be loaded:\n{err}',
                         detail=detail)
 
+                    self._settings_apply = False
+                    self._update_from_settings = False
+
                     self.stage_invalidate()
                     return
 
                 if self._model.stage_is_active(self._stage_type_next):
+
+                    # self._show_previews()
+
                     self._model.stage_ui_init(self._stage_type_next)
-                    if self._model.cfg.csv_file is not None:
-                        self._model.stage_start_update(self._stage_type_next)
+                    if (not self._update_from_settings
+                            or not self._cli_overrides
+                            or self._model.cli_cfg_file is not None):
+                        if self._model.cfg.csv_file is not None:
+                            self._model.stage_start_update(self._stage_type_next)
+
+                self._cli_overrides = False
+                self._settings_apply = False
+                self._update_from_settings = False
 
             self._model.invoke_on_gui_thread_async(_update_done)
 
@@ -177,7 +198,7 @@ class ConfigFrame(ttk.Frame, IStage):
         if self._model.cfg_file is not None:
             self._var_file.set(str(self._model.cfg_file))
         else:
-            if self._model.cli_overrides:
+            if self._cli_overrides:
                 if self._model.cli_cfg_file is not None:
                     self._model.cfg_file = self._model.cli_cfg_file
                     self._var_file.set(str(self._model.cfg_file))
@@ -195,6 +216,11 @@ class ConfigFrame(ttk.Frame, IStage):
         self._ui_file_btn.configure(state=tk.DISABLED)
         self._ui_open.configure(state=tk.DISABLED)
         self._ui_save_as.configure(state=tk.DISABLED)
+        self._ui_settings.configure(state=tk.DISABLED)
+        if self._update_from_settings:
+            settings_dlg = self._settings_dlg
+            if settings_dlg is not None:
+                settings_dlg.enable(False)
 
     def _ui_update_done(self):
         self._ui_update_start()
@@ -207,6 +233,11 @@ class ConfigFrame(ttk.Frame, IStage):
 
         if self._model.cfg is not None:
             self._ui_save_as.configure(state=tk.NORMAL)
+            self._ui_settings.configure(state=tk.NORMAL)
+            if self._update_from_settings:
+                settings_dlg = self._settings_dlg
+                if settings_dlg is not None:
+                    settings_dlg.enable(True)
             if self._model.cfg_file:
                 self._var_summary.set(f'Loaded configuration from'
                                       f' {self._model.cfg_file.name}')
@@ -279,48 +310,50 @@ class ConfigFrame(ttk.Frame, IStage):
                 detail=file_name)
 
     def _on_settings(self):
-        messagebox.showinfo(
-            title='Notice',
-            message='The settings UI is not implemented yet.')
+        cfg_dump_old = self._model.cfg.to_json()
+
+        def _process_cb(apply: bool):
+            self._settings_apply = apply
+            self._update_from_settings = True
+            nonlocal cfg_dump_old
+            cfg_dump_new = self._model.cfg.to_json()
+            if (cfg_dump_old != cfg_dump_new
+                    or not self._model.stage_is_active(self._stage_type_next)):
+                cfg_dump_old = cfg_dump_new
+                self.stage_start_update()
+            else:
+                # self._show_previews()
+                self._settings_apply = False
+                self._update_from_settings = False
+
+        self._settings_dlg = ConfigCfgDialog(self, self._model, process_cb=_process_cb)
+        self._settings_dlg.show_modal()
+        self._settings_dlg = None
+        self._settings_apply = False
+        self._update_from_settings = False
         self._var_settings.set(0)
 
     # Executed on thread
     def _update_task(self):
-        self._model.invoke_on_gui_thread_async(
-            self._var_summary.set, 'Loading configuration...')
+        if not self._update_from_settings:
+            self._model.invoke_on_gui_thread_async(
+                self._var_summary.set, 'Loading configuration...')
+
+            # CLI option takes precedence
+            if self._cli_overrides:
+                if self._model.cli_cfg_file is not None:
+                    self._model.cfg_file = self._model.cli_cfg_file
+
+            if self._model.cfg_file is not None:
+                with open(self._model.cfg_file, 'rt') as file:
+                    cfg_dump = file.read()
+            else:
+                cfg_dump = pkgutil.get_data(
+                    smlfm.__name__, 'data/default-config.json').decode()
+
+            self._model.cfg = smlfm.Config.from_json(cfg_dump)
 
         # CLI option takes precedence
-        if self._model.cli_overrides:
-            if self._model.cli_cfg_file is not None:
-                self._model.cfg_file = self._model.cli_cfg_file
-
-        if self._model.cfg_file is not None:
-            with open(self._model.cfg_file, 'rt') as file:
-                cfg_dump = file.read()
-        else:
-            cfg_dump = pkgutil.get_data(
-                smlfm.__name__, 'data/default-config.json').decode()
-
-        self._model.cfg = smlfm.Config.from_json(cfg_dump)
-
-        # CLI option takes precedence
-        if self._model.cli_overrides or self._model.cfg.csv_file is None:
+        if self._cli_overrides or self._model.cfg.csv_file is None:
             if self._model.cli_csv_file is not None:
                 self._model.cfg.csv_file = self._model.cli_csv_file
-
-        # Uncomment to override
-        # self._model.cfg.mla_centre = np.array([np.sqrt(3.0) / 2, 0.5])
-        # self._model.cfg.mla_centre = np.array([np.sqrt(3.0), 1.0])
-        # self._model.cfg.mla_centre = np.array([0.0, 1.0])
-        # self._model.cfg.mla_centre = np.array([np.sqrt(3.0), 2.0])
-
-        # Uncomment to override
-        # self._model.cfg.mla_offset = np.array([-7.1, 1.0])
-
-        # Uncomment to override
-        # self._model.cfg.save_dir = None
-
-        # Uncomment to override
-        # self._model.cfg.confirm_mla_alignment = False
-
-        self._model.cli_overrides = False

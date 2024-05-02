@@ -8,7 +8,7 @@ from idlelib.tooltip import Hovertip
 from pathlib import Path
 from threading import Thread
 from tkinter import filedialog, messagebox, ttk
-from typing import Union
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -19,6 +19,7 @@ import smlfm
 from .app_model import AppModel, IStage
 from .consts import *
 from .figure_window import FigureWindow
+from .fit_cfg_dialog import FitCfgDialog
 
 
 class FitFrame(ttk.Frame, IStage):
@@ -56,9 +57,8 @@ class FitFrame(ttk.Frame, IStage):
         self._ui_preview_3d = ttk.Checkbutton(self._ui_summary, style='Toolbutton')
         self._ui_preview_3d_tip = Hovertip(self._ui_preview_3d, text='')
 
-        self._ui_progress = ttk.Progressbar(self._ui_frm,
-                                            orient=tk.HORIZONTAL,
-                                            mode='determinate')
+        self._ui_progress = ttk.Progressbar(
+            self._ui_frm, orient=tk.HORIZONTAL, mode='determinate')
 
         # Layout
         self._ui_autosave_dir_chb.grid(column=0, row=0, sticky=tk.E)
@@ -112,7 +112,7 @@ class FitFrame(ttk.Frame, IStage):
         self._ui_preview_hist[IMAGE] = self._model.icons.fit_histogram
         self._ui_preview_hist_tip.text = 'Preview histogram'
         self._ui_preview_3d[IMAGE] = self._model.icons.fit_3d
-        self._ui_preview_3d_tip.text = 'See 3D localisations'
+        self._ui_preview_3d_tip.text = 'Final 3D localisations'
         self._ui_progress.configure()
 
         # Hooks
@@ -150,18 +150,22 @@ class FitFrame(ttk.Frame, IStage):
         self._var_progress = tk.IntVar()
         self._ui_progress[VARIABLE] = self._var_progress
 
-        self._update_thread: Union[Thread, None] = None
-        self._update_thread_err: Union[str, None] = None
-        self._update_thread_abort: Union[mp.Event, None] = None
+        self._update_thread: Optional[Thread] = None
+        self._update_thread_err: Optional[str] = None
+        self._update_thread_abort: Optional[mp.Event] = None
+
+        self._settings_dlg: Optional[FitCfgDialog] = None
+        self._settings_apply: bool = False
+        self._update_from_settings: bool = False
 
         # =0 ~ disabled, >0 ~ remaining flashes, None ~ infinite
         self._flash_counter = 0
         self._flash_id = None
 
         # A cache with locs_3d filtered by max_lateral_err and min_view_count
-        self._keep_idx: Union[npt.NDArray[float], None] = None
+        self._keep_idx: Optional[npt.NDArray[float]] = None
 
-        self._saved_path: Union[Path, None] = None
+        self._saved_path: Optional[Path] = None
 
         self.stage_ui_init()
 
@@ -181,8 +185,10 @@ class FitFrame(ttk.Frame, IStage):
         self._model.locs_3d = None
         self._keep_idx = None
         self._saved_path = None
-        for gt in [GraphType.LOCS_3D, GraphType.HISTOGRAM, GraphType.OCCURRENCES]:
-            self._model.destroy_graph(gt)
+
+        if not self._update_from_settings:
+            for gt in [GraphType.LOCS_3D, GraphType.HISTOGRAM, GraphType.OCCURRENCES]:
+                self._model.destroy_graph(gt)
 
         self._model.stage_enabled(self._stage_type, False)
 
@@ -242,23 +248,29 @@ class FitFrame(ttk.Frame, IStage):
                             title='File Error',
                             message=f'The results cannot be saved:\n{err}')
 
+                    self._settings_apply = False
+                    self._update_from_settings = False
+
                     self.stage_invalidate()
                     return
 
                 # if self._model.stage_is_active(self._stage_type_next):
                 if self._model.locs_3d is not None:
-                    if self._model.cfg.show_graphs:
-                        if self._model.cfg.show_result_graphs:
-                            if self._model.cfg.show_all_debug_graphs:
-                                self._var_preview_occ.set(1)
-                                self._on_preview_occ()
-                                self._var_preview_hist.set(1)
-                                self._on_preview_hist()
-                            self._var_preview_3d.set(1)
-                            self._on_preview_3d()
 
-                    # self._model.stage_ui_init(self._stage_type_next)
-                    # self._model.stage_start_update(self._stage_type_next)
+                    self._show_previews(force_update=True)
+
+                    self._model.stage_ui_init(self._stage_type_next)
+                    # Next phase updates automatically or the user continues manually
+                    if self._update_from_settings:
+                        self._model.stage_ui_flash(self._stage_type_next)
+                    else:
+                        if self._model.cfg.confirm_mla_alignment:
+                            self._model.stage_ui_flash(self._stage_type_next)
+                        else:
+                            self._model.stage_start_update(self._stage_type_next)
+
+                self._settings_apply = False
+                self._update_from_settings = False
 
             self._model.invoke_on_gui_thread_async(_update_done)
 
@@ -292,6 +304,10 @@ class FitFrame(ttk.Frame, IStage):
         self._ui_save_dir_btn.configure(state=tk.DISABLED)
         self._ui_save_as.configure(state=tk.DISABLED)
         self._ui_settings.configure(state=tk.DISABLED)
+        if self._update_from_settings:
+            settings_dlg = self._settings_dlg
+            if settings_dlg is not None:
+                settings_dlg.enable(False)
         self._ui_start.configure(state=tk.DISABLED)
         self._ui_preview_occ.configure(state=tk.DISABLED)
         self._ui_preview_hist.configure(state=tk.DISABLED)
@@ -311,6 +327,10 @@ class FitFrame(ttk.Frame, IStage):
                 self._ui_save_dir.configure(state=tk.DISABLED)
                 self._ui_save_dir_btn.configure(state=tk.DISABLED)
             self._ui_settings.configure(state=tk.NORMAL)
+            if self._update_from_settings:
+                settings_dlg = self._settings_dlg
+                if settings_dlg is not None:
+                    settings_dlg.enable(True)
             self._ui_start.configure(state=tk.NORMAL)
 
             # if self._model.stage_is_active(self._stage_type_next):
@@ -432,9 +452,31 @@ class FitFrame(ttk.Frame, IStage):
                 self._ui_update_done()
 
     def _on_settings(self):
-        messagebox.showinfo(
-            title='Notice',
-            message='The settings UI is not implemented yet.')
+        cfg_dump_old = self._model.cfg.to_json()
+
+        def _process_cb(apply: bool):
+            self._settings_apply = apply
+            self._update_from_settings = True
+            nonlocal cfg_dump_old
+            cfg_dump_new = self._model.cfg.to_json()
+            if (cfg_dump_old != cfg_dump_new
+                    # or not self._model.stage_is_active(self._stage_type_next)):
+                    or self._model.locs_3d is None):
+                cfg_dump_old = cfg_dump_new
+                self.stage_start_update()
+            else:
+                self._show_previews()
+                self._settings_apply = False
+                self._update_from_settings = False
+
+        self._settings_dlg = FitCfgDialog(self, self._model, process_cb=_process_cb)
+        self._settings_dlg.show_modal()
+        self._settings_dlg = None
+        if (not self._var_preview_occ.get()
+                and not self._var_preview_hist.get()
+                and not self._var_preview_3d.get()):
+            self._settings_apply = False
+            self._update_from_settings = False
         self._var_settings.set(0)
 
     def _on_start(self):
@@ -450,53 +492,115 @@ class FitFrame(ttk.Frame, IStage):
             self._flash_stop()
             self.stage_start_update()
 
-    def _on_preview_occ(self):
-        wnd = self._model.graphs[GraphType.OCCURRENCES]
-        if wnd is None:
+    def _show_previews(self, force_update: bool = False):
+        # if not self._model.stage_is_active(self._stage_type_next):
+        if self._model.locs_3d is None:
+            return
+
+        show = self._model.cfg.show_graphs and self._model.cfg.show_result_graphs
+
+        force_show_occ = show and self._model.cfg.show_all_debug_graphs
+        force_update_occ = (force_update
+                            and self._model.graph_exists(GraphType.OCCURRENCES))
+        if force_show_occ:
+            self._var_preview_occ.set(1)
+        if force_show_occ or force_update_occ:
+            self._on_preview_occ(force_update_occ)
+
+        force_show_hist = show and self._model.cfg.show_all_debug_graphs
+        force_update_hist = (force_update
+                             and self._model.graph_exists(GraphType.HISTOGRAM))
+        if force_show_hist:
+            self._var_preview_hist.set(1)
+        if force_show_hist or force_update_hist:
+            self._on_preview_hist(force_update_hist)
+
+        force_show_3d = show or self._settings_apply
+        force_update_3d = (force_update
+                           and self._model.graph_exists(GraphType.LOCS_3D))
+        if force_show_3d:
+            self._var_preview_3d.set(1)
+        if force_show_3d or force_update_3d:
+            self._on_preview_3d(force_update_3d)
+
+    def _on_preview_occ(self, force_update: bool = False):
+
+        def draw(f: Figure, set_size: bool = True) -> Figure:
             lateral_err = self._model.locs_3d[:, 3]  # Fitting error in X and Y (in microns)
             axial_err = self._model.locs_3d[:, 4]  # Fitting error in Z (in microns)
             photons = self._model.locs_3d[:, 6]  # Number of photons in fit
-            fig = smlfm.graphs.draw_occurrences(Figure(),
-                                                lateral_err[self._keep_idx],
-                                                axial_err[self._keep_idx],
-                                                photons[self._keep_idx])
+            return smlfm.graphs.draw_occurrences(
+                f,
+                lateral_err[self._keep_idx],
+                axial_err[self._keep_idx],
+                photons[self._keep_idx],
+                set_default_size=set_size)
+
+        wnd = self._model.graphs[GraphType.OCCURRENCES]
+        if wnd is None:
+            fig = draw(Figure())
             wnd = FigureWindow(fig, master=self, title='Occurrences')
             wnd.bind('<Map>', func=lambda _evt: self._var_preview_occ.set(1))
             wnd.bind('<Unmap>', func=lambda _evt: self._var_preview_occ.set(0))
             self._model.graphs[GraphType.OCCURRENCES] = wnd
+        else:
+            if force_update:
+                draw(wnd.figure, set_size=False)
+                wnd.refresh()
 
         if self._var_preview_occ.get():
             wnd.deiconify()
         else:
             wnd.withdraw()
 
-    def _on_preview_hist(self):
-        wnd = self._model.graphs[GraphType.HISTOGRAM]
-        if wnd is None:
+    def _on_preview_hist(self, force_update: bool = False):
+
+        def draw(f: Figure, set_size: bool = True) -> Figure:
             axial_err = self._model.locs_3d[:, 4]  # Fitting error in Z (in microns)
             photons = self._model.locs_3d[:, 6]  # Number of photons in fit
-            fig = smlfm.graphs.draw_histogram(Figure(),
-                                              photons[self._keep_idx],
-                                              axial_err[self._keep_idx])
+            return smlfm.graphs.draw_histogram(
+                f,
+                photons[self._keep_idx],
+                axial_err[self._keep_idx],
+                set_default_size=set_size)
+
+        wnd = self._model.graphs[GraphType.HISTOGRAM]
+        if wnd is None:
+            fig = draw(Figure())
             wnd = FigureWindow(fig, master=self, title='Histogram')
             wnd.bind('<Map>', func=lambda _evt: self._var_preview_hist.set(1))
             wnd.bind('<Unmap>', func=lambda _evt: self._var_preview_hist.set(0))
             self._model.graphs[GraphType.HISTOGRAM] = wnd
+        else:
+            if force_update:
+                draw(wnd.figure, set_size=False)
+                wnd.refresh()
 
         if self._var_preview_hist.get():
             wnd.deiconify()
         else:
             wnd.withdraw()
 
-    def _on_preview_3d(self):
+    def _on_preview_3d(self, force_update: bool = False):
+
+        def draw(f: Figure, set_size: bool = True) -> Figure:
+            xyz = self._model.locs_3d[:, 0:3]  # X, Y, Z
+            return smlfm.graphs.draw_3d_locs(
+                f,
+                xyz[self._keep_idx],
+                set_default_size=set_size)
+
         wnd = self._model.graphs[GraphType.LOCS_3D]
         if wnd is None:
-            xyz = self._model.locs_3d[:, 0:3]  # X, Y, Z
-            fig = smlfm.graphs.draw_3d_locs(Figure(), xyz[self._keep_idx])
+            fig = draw(Figure())
             wnd = FigureWindow(fig, master=self, title='3D')
             wnd.bind('<Map>', func=lambda _evt: self._var_preview_3d.set(1))
             wnd.bind('<Unmap>', func=lambda _evt: self._var_preview_3d.set(0))
             self._model.graphs[GraphType.LOCS_3D] = wnd
+        else:
+            if force_update:
+                draw(wnd.figure, set_size=False)
+                wnd.refresh()
 
         if self._var_preview_3d.get():
             wnd.deiconify()
@@ -547,6 +651,12 @@ class FitFrame(ttk.Frame, IStage):
 
         if self._model.cfg.log_timing:
             print(f'Complete fitting took {1e3 * (time.time() - tic):.3f} ms')
+
+        if self._update_thread_abort is not None:
+            if self._update_thread_abort.is_set():
+                self._model.locs_3d = None
+                self._keep_idx = None
+                return
 
         if self._model.cfg.save_dir is not None:
             timestamp_str = self._model.save_timestamp.strftime('%Y%m%d-%H%M%S')

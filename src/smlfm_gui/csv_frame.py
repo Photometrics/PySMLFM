@@ -5,7 +5,7 @@ from idlelib.tooltip import Hovertip
 from pathlib import Path
 from threading import Thread
 from tkinter import filedialog, messagebox, ttk
-from typing import Union
+from typing import Optional
 
 import numpy as np
 from matplotlib.figure import Figure
@@ -27,9 +27,6 @@ class CsvFrame(ttk.Frame, IStage):
 
         self._model = model
 
-        # TODO: Add detection
-        self._has_imagej = False
-
         # Controls
         self._ui_frm_lbl = ttk.Label(self)
         self._ui_frm = ttk.LabelFrame(self, labelwidget=self._ui_frm_lbl)
@@ -47,15 +44,11 @@ class CsvFrame(ttk.Frame, IStage):
 
         self._ui_tab2 = ttk.Frame(self._ui_tabs)
         self._ui_tabs.add(self._ui_tab2)
-        if self._has_imagej:
-            self._ui_file_img_lbl = ttk.Label(self._ui_tab2)
-            self._ui_file_img = ttk.Entry(self._ui_tab2)
-            self._ui_file_img_btn = ttk.Button(self._ui_tab2)
-            self._ui_file_res_lbl = ttk.Label(self._ui_tab2)
-            self._ui_file_res = ttk.Entry(self._ui_tab2, state=READONLY)
-            self._ui_peakfit = ttk.Button(self._ui_tab2)
-        else:
-            self._ui_no_imagej_lbl = ttk.Label(self._ui_tab2)
+        self._ui_file_img_lbl = ttk.Label(self._ui_tab2)
+        self._ui_file_img = ttk.Entry(self._ui_tab2)
+        self._ui_file_img_btn = ttk.Button(self._ui_tab2)
+        self._ui_peakfit = ttk.Button(self._ui_tab2)
+        self._ui_no_fiji_lbl = ttk.Label(self._ui_tab2)
 
         self._ui_summary = ttk.Frame(self._ui_frm)
         self._ui_summary_lbl = ttk.Label(self._ui_summary)
@@ -71,18 +64,12 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_open.grid(column=1, row=2, sticky=tk.W)
         self._ui_tab1.columnconfigure(index=1, weight=1)
 
-        if self._has_imagej:
-            self._ui_file_img_lbl.grid(column=0, row=0, sticky=tk.E)
-            self._ui_file_img.grid(column=1, row=0, sticky=tk.EW)
-            self._ui_file_img_btn.grid(column=2, row=0, sticky=tk.W)
-            self._ui_file_res_lbl.grid(column=0, row=1, sticky=tk.E)
-            self._ui_file_res.grid(column=1, row=1, sticky=tk.EW, columnspan=2)
-            self._ui_peakfit.grid(column=1, row=2, sticky=tk.W)
-            self._ui_tab2.columnconfigure(index=1, weight=1)
-        else:
-            self._ui_no_imagej_lbl.grid(column=0, row=0, sticky=tk.NSEW)
-            self._ui_tab2.columnconfigure(index=0, weight=1)
-            self._ui_tab2.rowconfigure(index=0, weight=1)
+        self._ui_file_img_lbl.grid(column=0, row=0, sticky=tk.E)
+        self._ui_file_img.grid(column=1, row=0, sticky=tk.EW, columnspan=2)
+        self._ui_file_img_btn.grid(column=3, row=0, sticky=tk.W)
+        self._ui_peakfit.grid(column=1, row=1, sticky=tk.W)
+        self._ui_no_fiji_lbl.grid(column=2, row=1, sticky=tk.EW, columnspan=2)
+        self._ui_tab2.columnconfigure(index=2, weight=1)
 
         self._ui_tabs.columnconfigure(index=0, weight=1)
 
@@ -125,19 +112,12 @@ class CsvFrame(ttk.Frame, IStage):
                           text='I have image stack only',
                           image=self._model.icons.csv_stack,
                           compound=tk.LEFT)
-        if self._has_imagej:
-            self._ui_file_img_lbl[TEXT] = 'Image stack:'
-            self._ui_file_img_btn.configure(text='...', width=3)
-            self._ui_file_res_lbl[TEXT] = 'Result file:'
-            self._ui_peakfit.configure(text='Run PeakFit in ImageJ',
-                                       image=self._model.icons.csv_peakfit,
-                                       compound=tk.LEFT)
-        else:
-            # TODO: Change the text once ImageJ detection implemented
-            self._ui_no_imagej_lbl.configure(text='ImageJ detection not implemented yet',
-                                             anchor=tk.CENTER)
-            # self._ui_no_imagej_lbl.configure(text='ImageJ not detected',
-            #                                  anchor=tk.CENTER)
+        self._ui_file_img_lbl[TEXT] = 'Image stack:'
+        self._ui_file_img_btn.configure(text='...', width=3)
+        self._ui_peakfit.configure(text='Run PeakFit in Fiji',
+                                   image=self._model.icons.csv_peakfit,
+                                   compound=tk.LEFT)
+        self._ui_no_fiji_lbl.configure(text='Fiji not detected')
         self._ui_preview[IMAGE] = self._model.icons.preview
         self._ui_preview_tip.text = 'Preview raw localisations'
 
@@ -148,9 +128,8 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_fmt_loc.bind(
             '<FocusOut>', lambda _e: self._on_fmt_loc_leave())
         self._ui_open[COMMAND] = self._on_open
-        if self._has_imagej:
-            self._ui_file_img_btn[COMMAND] = self._on_get_file_img
-            self._ui_peakfit[COMMAND] = self._on_run_peakfit
+        self._ui_file_img_btn[COMMAND] = self._on_get_file_img
+        self._ui_peakfit[COMMAND] = self._on_run_peakfit
         self._ui_summary.bind(
             '<Configure>', lambda _e: self._ui_summary_lbl.configure(
                 wraplength=self._ui_summary_lbl.winfo_width()))
@@ -164,17 +143,14 @@ class CsvFrame(ttk.Frame, IStage):
             textvariable=self._var_fmt_loc,
             values=[f.name for f in smlfm.LocalisationFile.Format])
         self._var_file_img = tk.StringVar()
-        self._var_file_res = tk.StringVar()
-        if self._has_imagej:
-            self._ui_file_img[TEXTVARIABLE] = self._var_file_img
-            self._ui_file_res[TEXTVARIABLE] = self._var_file_res
+        self._ui_file_img[TEXTVARIABLE] = self._var_file_img
         self._var_summary = tk.StringVar()
         self._ui_summary_lbl[TEXTVARIABLE] = self._var_summary
         self._var_preview = tk.IntVar()
         self._ui_preview[VARIABLE] = self._var_preview
 
-        self._update_thread: Union[Thread, None] = None
-        self._update_thread_err: Union[str, None] = None
+        self._update_thread: Optional[Thread] = None
+        self._update_thread_err: Optional[str] = None
 
         self.stage_ui_init()
 
@@ -189,6 +165,7 @@ class CsvFrame(ttk.Frame, IStage):
 
     def stage_invalidate(self):
         self._model.csv = None
+
         self._model.destroy_graph(GraphType.CSV_RAW)
 
         self._model.stage_enabled(self._stage_type, False)
@@ -227,10 +204,8 @@ class CsvFrame(ttk.Frame, IStage):
                     return
 
                 if self._model.stage_is_active(self._stage_type_next):
-                    if self._model.cfg.show_graphs:
-                        if self._model.cfg.show_all_debug_graphs:
-                            self._var_preview.set(1)
-                            self._on_preview()
+
+                    self._show_previews(force_update=True)
 
                     self._model.stage_ui_init(self._stage_type_next)
                     self._model.stage_start_update(self._stage_type_next)
@@ -245,6 +220,8 @@ class CsvFrame(ttk.Frame, IStage):
             if self._model.cfg.csv_file is not None:
                 self._var_file_loc.set(str(self._model.cfg.csv_file))
             self._var_fmt_loc.set(self._model.cfg.csv_format.name)
+        if self._model.has_fiji:
+            self._ui_no_fiji_lbl.grid_forget()
 
         self._ui_update_done()
 
@@ -259,10 +236,10 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_file_loc_btn.configure(state=tk.DISABLED)
         self._ui_fmt_loc.configure(state=tk.DISABLED)
         self._ui_open.configure(state=tk.DISABLED)
-        if self._has_imagej:
-            self._ui_file_img.configure(state=tk.DISABLED)
-            self._ui_file_img_btn.configure(state=tk.DISABLED)
-            self._ui_peakfit.configure(state=tk.DISABLED)
+
+        self._ui_file_img.configure(state=tk.DISABLED)
+        self._ui_file_img_btn.configure(state=tk.DISABLED)
+        self._ui_peakfit.configure(state=tk.DISABLED)
 
         self._ui_preview.configure(state=tk.DISABLED)
 
@@ -276,10 +253,12 @@ class CsvFrame(ttk.Frame, IStage):
             self._ui_file_loc_btn.configure(state=tk.NORMAL)
             self._ui_fmt_loc.configure(state=READONLY)
             self._ui_open.configure(state=tk.NORMAL)
-            if self._has_imagej:
-                self._ui_file_img.configure(state=tk.NORMAL)
-                self._ui_file_img_btn.configure(state=tk.NORMAL)
-                self._ui_peakfit.configure(state=tk.NORMAL)
+
+            if self._model.has_imagej:
+                if self._model.has_fiji:
+                    self._ui_file_img.configure(state=tk.NORMAL)
+                    self._ui_file_img_btn.configure(state=tk.NORMAL)
+                    self._ui_peakfit.configure(state=tk.NORMAL)
 
             if self._model.stage_is_active(self._stage_type_next):
                 self._ui_preview.configure(state=tk.NORMAL)
@@ -334,7 +313,6 @@ class CsvFrame(ttk.Frame, IStage):
         if file_name:
             self._var_file_img.set(file_name)
             csv_file = Path(file_name + '.csv')
-            self._var_file_res.set(str(csv_file))
             self._var_file_loc.set(str(csv_file))
             self._model.cfg.csv_file = csv_file
 
@@ -358,14 +336,38 @@ class CsvFrame(ttk.Frame, IStage):
 
         self.stage_start_update()
 
-    def _on_preview(self):
+    def _show_previews(self, force_update: bool = False):
+        if not self._model.stage_is_active(self._stage_type_next):
+            return
+
+        show = self._model.cfg.show_graphs and self._model.cfg.show_all_debug_graphs
+
+        force_show = show  # or self._settings_apply
+        force_update = force_update and self._model.graph_exists(GraphType.CSV_RAW)
+        if force_show:
+            self._var_preview.set(1)
+        if force_show or force_update:
+            self._on_preview(force_update)
+
+    def _on_preview(self, force_update: bool = False):
+
+        def draw(f: Figure, set_size: bool = True) -> Figure:
+            return smlfm.graphs.draw_locs_csv(
+                f,
+                self._model.csv.data[:, 1:3],
+                set_default_size=set_size)
+
         wnd = self._model.graphs[GraphType.CSV_RAW]
         if wnd is None:
-            fig = smlfm.graphs.draw_locs_csv(Figure(), self._model.csv.data[:, 1:3])
+            fig = draw(Figure())
             wnd = FigureWindow(fig, master=self, title='Raw localisations')
             wnd.bind('<Map>', func=lambda _evt: self._var_preview.set(1))
             wnd.bind('<Unmap>', func=lambda _evt: self._var_preview.set(0))
             self._model.graphs[GraphType.CSV_RAW] = wnd
+        else:
+            if force_update:
+                draw(wnd.figure, set_size=False)
+                wnd.refresh()
 
         if self._var_preview.get():
             wnd.deiconify()

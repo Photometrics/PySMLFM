@@ -1,4 +1,8 @@
 {
+    "_fiji_dir_doc": "A path to Fiji.app folder with Fiji application.\nFiji is needed to find localizations in an image stack via PeakFit plugin.\nIf set to 'null' or empty string, a CSV file must be given.",
+    "fiji_dir": "c:\\Users\\thanak\\Downloads\\tmp9",
+    "_fiji_jvm_opts_doc": "A list of space separated options for Java Virtual Machine started by Fiji.",
+    "fiji_jvm_opts": "-Xmx10g",
     "_csv_file_doc": "A path to CSV file with localisations.\nA CLI application requires this to be a valid path to existing file.\nA GUI application can call PeakFit plugin from ImageJ and use this\npath to say ImageJ where to store the PeakFit output.\nThe 'null' value is allowed only when loading from JSON to allow\nthe application ask user interactively.",
     "csv_file": null,
     "_csv_format_doc": "A format of CSV file with localisations.\nSupported values: 'PEAKFIT', 'THUNDERSTORM', 'PICASSO'.",
@@ -56,7 +60,7 @@
     "_fit_params_aberration_angle_tolerance_doc": "A tolerance for selecting with angles around relative U,V (in degrees).",
     "_fit_params_aberration_threshold_doc": "A max. distance of the candidate (in microns).",
     "_fit_params_aberration_min_views_doc": "A min. number of views the candidate is seen to count it.",
-    "_fit_params_aberration_z_calib_doc": "A calibration factor between optical and physical Z axis.",
+    "_fit_params_aberration_z_calib_doc": "A calibration factor between optical and physical Z axis.\nUnused and ignored for aberration correction.",
     "fit_params_aberration": {
         "frame_min": -1,
         "frame_max": -1,
@@ -73,7 +77,7 @@
     "_aberration_params_photon_threshold_doc": "A min. number of photons to apply correction.",
     "_aberration_params_min_views_doc": "A min. number of views the candidate is seen to count it.",
     "aberration_params": {
-        "axial_window": 1,
+        "axial_window": 1.0,
         "photon_threshold": 1,
         "min_views": 3
     },

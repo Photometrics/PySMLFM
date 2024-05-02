@@ -24,7 +24,7 @@ def draw_locs_normalised(fig: Figure,
     ax.set_yticks([])
 
     ax.scatter(xy[:, 0], xy[:, 1],
-               s=1, c=lens_idx, marker='.')
+               s=1, c=lens_idx, marker=',', lw=0)
 
     ax.scatter(uv[:, 0], uv[:, 1],
                s=3, c='tomato')

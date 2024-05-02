@@ -16,7 +16,7 @@ def draw_locs_csv(fig: Figure,
 
     ax: Axes = fig.add_subplot()
     ax.scatter(locs[:, 0], locs[:, 1],
-               s=1, c='green', marker='.')
+               s=1, c='green', marker=',', lw=0)
 
     ax.set_aspect('equal')
     add_watermark(fig)

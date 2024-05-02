@@ -3,6 +3,7 @@ from typing import Optional
 import numpy.typing as npt
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 
 from ..graphs import add_watermark
 
@@ -10,6 +11,7 @@ from ..graphs import add_watermark
 def draw_mla(fig: Figure,
              lens_centres: npt.NDArray[float],
              mla_centre: Optional[npt.NDArray[float]] = None,
+             bfp_radius: Optional[float] = None,
              set_default_size: bool = True
              ) -> Figure:
     fig.clear(True)
@@ -18,6 +20,13 @@ def draw_mla(fig: Figure,
     fig.set_layout_engine('tight')
 
     ax: Axes = fig.add_subplot()
+
+    if bfp_radius is not None and mla_centre is not None:
+        bfp = Circle(xy=(float(mla_centre[0]), float(mla_centre[1])),
+                     radius=bfp_radius, fill=False,
+                     edgecolor='purple', alpha=0.25)
+        ax.add_patch(bfp)
+
     ax.scatter(lens_centres[:, 0], lens_centres[:, 1],
                s=3, c='tomato', marker='o')
 

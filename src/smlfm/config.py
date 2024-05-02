@@ -16,6 +16,14 @@ from .micro_lens_array import MicroLensArray
 
 @dataclass
 class Config:
+    _fiji_dir_doc: str = (
+        'A path to Fiji.app folder with Fiji application.\n'
+        'Fiji is needed to find localizations in an image stack via PeakFit plugin.\n'
+        'If set to \'null\' or empty string, a CSV file must be given.')
+    fiji_dir: Optional[Path] = None
+    _fiji_jvm_opts_doc: str = (
+        'A list of space separated options for Java Virtual Machine started by Fiji.')
+    fiji_jvm_opts: str = '-Xmx10g'
     _csv_file_doc: str = (
         'A path to CSV file with localisations.\n'
         'A CLI application requires this to be a valid path to existing file.\n'
@@ -118,7 +126,8 @@ class Config:
     _fit_params_aberration_min_views_doc: str = (
         'A min. number of views the candidate is seen to count it.')
     _fit_params_aberration_z_calib_doc: str = (
-        'A calibration factor between optical and physical Z axis.')
+        'A calibration factor between optical and physical Z axis.\n'
+        'Unused and ignored for aberration correction.')
     fit_params_aberration: Fitting.FitParams = Fitting.FitParams(
         frame_min=-1,
         frame_max=-1,
@@ -139,7 +148,7 @@ class Config:
     _aberration_params_min_views_doc: str = (
         'A min. number of views the candidate is seen to count it.')
     aberration_params: Fitting.AberrationParams = Fitting.AberrationParams(
-        axial_window=1,
+        axial_window=1.0,
         photon_threshold=1,
         min_views=3,
     )

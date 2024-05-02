@@ -7,6 +7,7 @@ from matplotlib import colors
 from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
 from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 
 from ..graphs import add_watermark
 
@@ -16,6 +17,7 @@ def draw_locs(fig: Figure,
               lens_idx: npt.NDArray[float],
               lens_centres: Optional[npt.NDArray[float]] = None,
               mla_centre: Optional[npt.NDArray[float]] = None,
+              bfp_radius: Optional[float] = None,
               set_default_size: bool = True
               ) -> Figure:
     fig.clear(True)
@@ -27,18 +29,7 @@ def draw_locs(fig: Figure,
     ax.set_xlabel(r'X [$\mu$m]')
     ax.set_ylabel(r'Y [$\mu$m]')
 
-    ax.scatter(xy[:, 0], xy[:, 1], s=1, c=lens_idx, marker='.')
-
     lens_idx_uni = np.unique(lens_idx).astype(int)
-
-    if lens_centres is not None:
-        lens_centres_uni = lens_centres[lens_idx_uni, :]
-        ax.scatter(lens_centres_uni[:, 0], lens_centres_uni[:, 1],
-                   s=3, c='tomato')
-
-    if mla_centre is not None:
-        ax.scatter(mla_centre[0], mla_centre[1],
-                   s=20, c='red', marker='x')
 
     cbar_lenses = lens_idx_uni
     cbar_labels = [str(i) for i in cbar_lenses]
@@ -52,13 +43,28 @@ def draw_locs(fig: Figure,
     cbar.set_ticks(cbar_ticks.tolist(), labels=cbar_labels)
     cbar.set_label('Lens index')
 
+    if bfp_radius is not None and mla_centre is not None:
+        bfp = Circle(xy=(float(mla_centre[0]), float(mla_centre[1])),
+                     radius=bfp_radius, fill=False,
+                     edgecolor='purple', alpha=0.25)
+        ax.add_patch(bfp)
+
+    ax.scatter(xy[:, 0], xy[:, 1], s=1, c=lens_idx, marker=',', lw=0)
+
+    if mla_centre is not None:
+        ax.scatter(mla_centre[0], mla_centre[1],
+                   s=20, c='red', marker='x')
+
     if lens_centres is not None:
+        lens_centres_uni = lens_centres[lens_idx_uni, :]
+        ax.scatter(lens_centres_uni[:, 0], lens_centres_uni[:, 1],
+                   s=3, c='tomato')
         for i in lens_idx_uni:
             ax.annotate(str(i),
                         xy=(lens_centres[i, 0], lens_centres[i, 1]),
                         xycoords='data',
-                        xytext=(1.5, 1.0),
-                        alpha=0.5,
+                        xytext=(5.0, 2.5),
+                        alpha=0.75,
                         textcoords='offset points',
                         size=10)
 

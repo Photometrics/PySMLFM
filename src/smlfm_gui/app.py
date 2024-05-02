@@ -9,6 +9,9 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
 
+        # Remain invisible until the UI is fully constructed
+        self.withdraw()
+
         self._model = AppModel()
 
         self.title('Single Molecule Light Field Microscopy')
@@ -16,14 +19,14 @@ class App(tk.Tk):
 
         self._model.create_gui(self)
 
-        # Set default size (enlarges to min. size if necessary)
-        self.geometry('450x500')
+        # Set default size and position (enlarges to min. size if necessary)
+        self.geometry('450x500+0+0')
+
+        # Now it is ready to become visible
+        self.deiconify()
 
         self._model.stage_invalidate(StageType.CONFIG)
-
-        # Load configuration given via CLI option or wait for user to select
-        if self._model.cli_cfg_file is not None:
-            self._model.stage_start_update(StageType.CONFIG)
+        self._model.stage_start_update(StageType.CONFIG)
 
 
 def app():

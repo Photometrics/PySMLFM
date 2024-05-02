@@ -14,6 +14,8 @@ from .assets import Icons
 from .consts import *
 from .figure_window import FigureWindow
 
+_has_imagej: bool = False
+
 
 class IStage:
     def stage_type(self) -> StageType:
@@ -138,10 +140,23 @@ class AppModel:
         self.icons = Icons()
 
         self._root = None
-        self._min_root_width = None
-        self._gui_queue = None
+        self._min_root_width: Union[int, None] = None
+        self._gui_queue: Union[SimpleQueue, None] = None
 
-        self.cli_overrides = True  # Resets after first initialization
+        # One time detection during app start if PyImageJ package is installed
+        self.has_imagej: bool = _has_imagej
+        # Detected during update of CFG stage
+        # Once detected, it cannot be deactivated as Java can only be started once
+        self.has_fiji: bool = False
+        # A path where Fiji app has been detected
+        # Modified value will apply only after app restarts
+        self.fiji_dir: Union[Path, None] = None
+        # A list with options for JVM
+        # Modified value will apply only after app restarts
+        self.fiji_jvm_opts: str = ''
+        # ImageJ/Fiji instance, if detected
+        if _has_imagej:
+            self.ij: Union[jpype.JClass, None] = None
 
         self.save_timestamp = None
 
@@ -294,6 +309,9 @@ class AppModel:
     def stages_ui_updating(self, updating: bool):
         for st in StageType:
             self.stage_ui_updating(st, updating)
+
+    def graph_exists(self, gt: GraphType) -> bool:
+        return self.graphs[gt] is not None
 
     def destroy_graph(self, gt: GraphType):
         wnd = self.graphs[gt]
