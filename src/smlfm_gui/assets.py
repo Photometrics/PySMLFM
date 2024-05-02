@@ -107,6 +107,10 @@ class Icons:
         data = replace_color(data, color_cancel)
         self.cancel = tksvg.SvgImage(data=data, scale=self.svg_scale)
 
+        data = pkgutil.get_data(_pkg_name_, f'data/done{mi_suffix}')
+        data = replace_color(data, color_start)
+        self.ok = tksvg.SvgImage(data=data, scale=self.svg_scale)
+
         data = pkgutil.get_data(_pkg_name_, f'data/visibility{mi_suffix}')
         data = replace_color(data, color_preview)
         self.preview = tksvg.SvgImage(data=data, scale=self.svg_scale)
