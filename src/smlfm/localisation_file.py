@@ -71,6 +71,7 @@ class LocalisationFile:
             id_intensity = 5   # column index with intensity (in photons)
             id_background = 6  # column index with background (in photons)
             id_precision = 8   # column index with precision or uncertainty (in nm)
+            min_columns = 9
             scale_xy = 1000    # scale coordinates to microns
             scale_pr = 1000    # scale precision to microns
         elif self.file_format == LocalisationFile.Format.THUNDERSTORM:
@@ -82,6 +83,7 @@ class LocalisationFile:
             id_intensity = 4   # column index with intensity (in photons)
             id_background = 5  # column index with background (in photons)
             id_precision = 6   # column index with precision or uncertainty (in nm)
+            min_columns = 7
             scale_xy = 1000    # scale coordinates to microns
             scale_pr = 1000    # scale precision to microns
         elif self.file_format == LocalisationFile.Format.PEAKFIT:
@@ -95,6 +97,7 @@ class LocalisationFile:
             id_intensity = 8   # column index with intensity (in photons)
             id_background = 7  # column index with background (in photons)
             id_precision = 13  # column index with precision or uncertainty (in nm)
+            min_columns = 14
             scale_xy = 1       # scale coordinates to microns (to be set yet)
             scale_pr = 1000    # scale precision to microns
         else:
@@ -102,6 +105,7 @@ class LocalisationFile:
                              f' {self.file_format}')
 
         csv_header_rows = 0
+        csv_delimiter = None  # Default delimiter (whitespaces)
         max_line_len = 16384
         with open(self.csv_file, 'r') as f:
             while True:
@@ -111,25 +115,33 @@ class LocalisationFile:
                 if line[-1] != '\n' and len(line) == max_line_len:
                     raise ValueError(f'Row {csv_header_rows + 1} is too long')
                 if line[0].isdigit():
-                    break  # First row with data
+                    # First row with data, test comma delimiter
+                    if len(line.split(',')) >= min_columns:
+                        csv_delimiter = ','
+                    break
                 csv_header_rows += 1
 
-        raw_data = np.genfromtxt(self.csv_file, delimiter=',', dtype=float,
-                                 skip_header=csv_header_rows)
+        raw_data = np.genfromtxt(self.csv_file, delimiter=csv_delimiter,
+                                 dtype=float, skip_header=csv_header_rows)
 
-        if raw_data.shape[0] > 0:
-            self._raw_data = np.empty((raw_data.shape[0], 8))
-            self._raw_data.fill(np.nan)
-            self._raw_data[:, 0] = raw_data[:, id_frame]
-            self._raw_data[:, 1] = raw_data[:, id_x] / scale_xy
-            self._raw_data[:, 2] = raw_data[:, id_y] / scale_xy
-            self._raw_data[:, 3] = raw_data[:, id_sigma_x] / scale_xy
-            self._raw_data[:, 4] = raw_data[:, id_sigma_y] / scale_xy
-            self._raw_data[:, 5] = raw_data[:, id_intensity]
-            self._raw_data[:, 6] = raw_data[:, id_background]
-            self._raw_data[:, 7] = raw_data[:, id_precision] / scale_pr
+        if raw_data.shape[0] <= 0:
+            raise ValueError(f'No valid data found')
+        if raw_data.shape[1] < min_columns:
+            raise ValueError(f'Insufficient number of columns for selected format,'
+                             f'required min. {min_columns}, found {raw_data.shape[1]}')
 
-            self.data = self._raw_data.copy()
+        self._raw_data = np.empty((raw_data.shape[0], 8))
+        self._raw_data.fill(np.nan)
+        self._raw_data[:, 0] = raw_data[:, id_frame]
+        self._raw_data[:, 1] = raw_data[:, id_x] / scale_xy
+        self._raw_data[:, 2] = raw_data[:, id_y] / scale_xy
+        self._raw_data[:, 3] = raw_data[:, id_sigma_x] / scale_xy
+        self._raw_data[:, 4] = raw_data[:, id_sigma_y] / scale_xy
+        self._raw_data[:, 5] = raw_data[:, id_intensity]
+        self._raw_data[:, 6] = raw_data[:, id_background]
+        self._raw_data[:, 7] = raw_data[:, id_precision] / scale_pr
+
+        self.data = self._raw_data.copy()
 
     def scale_peakfit_data(self,
                            pixel_size: float
