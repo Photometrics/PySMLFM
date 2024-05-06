@@ -25,7 +25,7 @@ class Config:
         'A list of space separated options for Java Virtual Machine started by Fiji.')
     fiji_jvm_opts: str = '-Xmx10g'
     _csv_file_doc: str = (
-        'A path to CSV file with localisations.\n'
+        'A path to CSV/XLS file with localisations.\n'
         'A CLI application requires this to be a valid path to existing file.\n'
         'A GUI application can call PeakFit plugin from Fiji and use this\n'
         'path to say Fiji where to store the PeakFit output.\n'

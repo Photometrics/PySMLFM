@@ -285,7 +285,7 @@ class CsvFrame(ttk.Frame, IStage):
         file_name = filedialog.askopenfilename(
             parent=self,
             title='Select CSV file to open...',
-            filetypes=(('CSV files', '*.csv'), ('All files', '*')),
+            filetypes=(('CSV files', '*.csv *.xls'), ('All files', '*')),
             initialdir=initial_dir,
             initialfile=initial_file)
         if file_name:

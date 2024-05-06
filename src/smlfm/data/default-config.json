@@ -3,7 +3,7 @@
     "fiji_dir": "c:\\Users\\thanak\\Downloads\\tmp9",
     "_fiji_jvm_opts_doc": "A list of space separated options for Java Virtual Machine started by Fiji.",
     "fiji_jvm_opts": "-Xmx10g",
-    "_csv_file_doc": "A path to CSV file with localisations.\nA CLI application requires this to be a valid path to existing file.\nA GUI application can call PeakFit plugin from ImageJ and use this\npath to say ImageJ where to store the PeakFit output.\nThe 'null' value is allowed only when loading from JSON to allow\nthe application ask user interactively.",
+    "_csv_file_doc": "A path to CSV/XLS file with localisations.\nA CLI application requires this to be a valid path to existing file.\nA GUI application can call PeakFit plugin from ImageJ and use this\npath to say ImageJ where to store the PeakFit output.\nThe 'null' value is allowed only when loading from JSON to allow\nthe application ask user interactively.",
     "csv_file": null,
     "_csv_format_doc": "A format of CSV file with localisations.\nSupported values: 'PEAKFIT', 'THUNDERSTORM', 'PICASSO'.",
     "csv_format": "PEAKFIT",

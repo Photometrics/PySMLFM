@@ -191,7 +191,7 @@ class AppModel:
             a = arg.casefold()
             if a.endswith('.json'):
                 self.cli_cfg_file = Path(arg)
-            elif a.endswith('.csv'):
+            elif a.endswith('.csv') or a.endswith('.xls'):
                 self.cli_csv_file = Path(arg)
             else:
                 print(f'WARNING: Ignoring unrecognized option "{arg}"')

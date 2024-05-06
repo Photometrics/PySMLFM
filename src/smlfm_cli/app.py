@@ -26,7 +26,7 @@ def app():
         a = arg.casefold()
         if a.endswith('.json'):
             cfg_file = Path(arg)
-        elif a.endswith('.csv'):
+        elif a.endswith('.csv') or a.endswith('.xls'):
             csv_file = Path(arg)
         else:
             print(f'WARNING: Ignoring unrecognized option "{arg}"')
