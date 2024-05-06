@@ -3,7 +3,7 @@ import threading
 import tkinter as tk
 from pathlib import Path
 from queue import Empty, SimpleQueue
-from tkinter import ttk
+from tkinter import messagebox, ttk
 from typing import Dict, Union
 
 import numpy.typing as npt
@@ -14,7 +14,13 @@ from .assets import Icons
 from .consts import *
 from .figure_window import FigureWindow
 
-_has_imagej: bool = False
+_has_imagej: bool = True
+try:
+    import imagej
+    import jpype
+    import scyjava
+except ImportError(imagej):
+    _has_imagej = False
 
 
 class IStage:
@@ -319,6 +325,151 @@ class AppModel:
         if wnd is not None:
             wnd.withdraw()  # Keep that hiding for Unmap binding to work
             wnd.destroy()
+
+    # Can be executed on thread
+    def detect_fiji(self):
+        fiji_dir = self.cfg.fiji_dir
+        fiji_jvm_opts = self.cfg.fiji_jvm_opts
+        if self.has_fiji:
+            # Once detected, it cannot be deactivated as Java can only be started once
+            if fiji_dir != self.fiji_dir or fiji_jvm_opts != self.fiji_jvm_opts:
+                print('WARNING: Restart the application to apply new settings')
+                self.invoke_on_gui_thread_async(
+                    messagebox.showwarning,
+                    kwargs=dict(
+                        title='Warning',
+                        message='Restart the application to apply new settings.',
+                        detail='Java can be started only once.'))
+            return
+        if not self.has_imagej:
+            # PyImageJ not installed
+            return
+        if fiji_dir is None:
+            return
+
+        try:
+            jvm_opts = fiji_jvm_opts.split()
+            scyjava.config.add_options(jvm_opts)
+            self.ij = imagej.init(str(fiji_dir), mode=imagej.Mode.INTERACTIVE)
+        except RuntimeError:
+            return
+
+        print(f'ImageJ version(s): {self.ij.getVersion()}')
+        print(f'IJ app version: {self.ij.app().getVersion()}')
+
+        self.has_fiji = True
+        self.fiji_dir = fiji_dir
+        self.fiji_jvm_opts = fiji_jvm_opts
+
+    # Can be executed on thread
+    def run_peakfit(self):
+        j_stack = self.ij.io().open(str(self.cfg.img_stack))
+        j_imp_stack = self.ij.py.to_imageplus(j_stack)
+
+        res_dir = self.cfg.csv_file.parent
+
+        # noinspection PyPep8Naming
+        HOME = Path.home()
+
+        # Settings for a PeakFit ImageJ plugin
+        peakfit_args = {
+            'template': '',
+        }
+        if not (HOME / '.gdsc.smlm' / 'calibration.settings').exists():
+            peakfit_args.update({
+                'camera_type': 'EMCCD',
+                'camera_bias': 400.00,
+                'gain': 40.0000,
+                'read_noise': 7.1600,
+                'calibration': 266.0,
+                'exposure_time': 30.0,
+            })
+        if not (HOME / '.gdsc.smlm' / 'psf.settings').exists():
+            peakfit_args.update({
+                'psf': 'Circular Gaussian 2D',
+                'psf_parameter_1': 1.700,
+            })
+        if True:
+            peakfit_args.update({
+                'spot_filter_type': 'Difference',
+                'spot_filter2': 'Mean',
+                'smoothing2': 2.0,
+            })
+        if not (HOME / '.gdsc.smlm' / 'fitenginesettings.settings').exists():
+            peakfit_args.update({
+                # 'spot_filter_type': 'Difference',
+                # 'spot_filter2': 'Mean',
+                # 'smoothing2': 2.0,
+                'spot_filter': 'Mean',
+                'smoothing': 0.32,
+                'search_width': 0.90,
+                'border_width': 4.00,
+                'fitting_width': 4.00,
+
+                'fit_solver': 'LVM LSE',
+                'relative_threshold': 1.0E-6,
+                'absolute_threshold': 1.0E-16,
+                'parameter_relative_threshold': 0.0,
+                'parameter_absolute_threshold': 0.0,
+                'max_iterations': 20,
+                'lambda': 10.0000,
+                'fail_limit': 3,
+                'pass_rate': 0.50,
+
+                'neighbour_height': 0.30,
+                'residuals_threshold': 1.00,
+                'duplicate_distance': 0.50,
+                'duplicate_distance_absolute': True,
+
+                'shift_factor': 1.2,
+                'signal_strength': 3.0,
+                'min_photons': 10.0,
+                'min_width_factor': 0.4,
+                'max_width_factor': 1.0,
+                'precision': 75.0,
+                'precision_method': 'Mortensen',
+            })
+        # Overwrite result settings unconditionally
+        # if not (HOME / '.gdsc.smlm' / 'resultssettings.settings').exists():
+        if True:
+            peakfit_args.update({
+                'results_format': 'Text',
+                'file_distance_unit': 'unknown (na)',
+                'file_intensity_unit': 'unknown (na)',
+                'file_angle_unit': 'unknown (na)',
+                'file_show_precision': True,
+                'results_directory': str(res_dir),
+            })
+        # Temporary settings for development
+        peakfit_args.update({
+            # 'log_progress': True,
+
+            'image': 'None',
+            # 'image': 'Localisations (width=precision)',
+            'equalised': True,
+            'image_size_mode': 'Scaled',
+            'image_scale': 1,
+            'lut': 'Fire',
+        })
+
+        was_log_window_open = self.ij.WindowManager.getWindow("Log") is not None
+
+        # Apply our configuration
+        self.ij.py.run_plugin('Fit Configuration', args=peakfit_args)
+        # Allow user to change the configuration
+        self.ij.py.run_plugin('Fit Configuration')
+        # Run the plugin code on given stack
+        self.ij.py.run_plugin('Peak Fit', args=peakfit_args, imp=j_imp_stack)
+
+        # Close Log window if it wasn't open before Peak Fit
+        if not was_log_window_open:
+            log_window = self.ij.WindowManager.getWindow("Log")
+            if log_window is not None:
+                log_window.setVisible(False)
+
+        res_xls_file = res_dir / (self.cfg.img_stack.name + '.results.xls')
+        # Rename to configured CSV file (overwrite if exists)
+        res_xls_file.replace(self.cfg.csv_file)
 
     @staticmethod
     def grid_slaves_configure(container: tk.Widget, *args, **kwargs):

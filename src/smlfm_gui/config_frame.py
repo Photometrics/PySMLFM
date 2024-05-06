@@ -353,6 +353,13 @@ class ConfigFrame(ttk.Frame, IStage):
 
             self._model.cfg = smlfm.Config.from_json(cfg_dump)
 
+        # Skip Fiji detection during first update, unless given cfg file via CLI
+        if (not self._cli_overrides
+                or self._model.cli_cfg_file is not None):
+            self._model.invoke_on_gui_thread_async(
+                self._var_summary.set, 'Detecting Fiji...')
+            self._model.detect_fiji()
+
         # CLI option takes precedence
         if self._cli_overrides or self._model.cfg.csv_file is None:
             if self._model.cli_csv_file is not None:

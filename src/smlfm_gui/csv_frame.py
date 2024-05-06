@@ -27,6 +27,8 @@ class CsvFrame(ttk.Frame, IStage):
 
         self._model = model
 
+        cfg_default = smlfm.Config()
+
         # Controls
         self._ui_frm_lbl = ttk.Label(self)
         self._ui_frm = ttk.LabelFrame(self, labelwidget=self._ui_frm_lbl)
@@ -37,6 +39,8 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_tabs.add(self._ui_tab1)
         self._ui_file_loc_lbl = ttk.Label(self._ui_tab1)
         self._ui_file_loc = ttk.Entry(self._ui_tab1)
+        # noinspection PyProtectedMember
+        Hovertip(self._ui_file_loc, text=cfg_default._csv_file_doc)
         self._ui_file_loc_btn = ttk.Button(self._ui_tab1)
         self._ui_fmt_loc_lbl = ttk.Label(self._ui_tab1)
         self._ui_fmt_loc = ttk.Combobox(self._ui_tab1, state=READONLY)
@@ -46,6 +50,8 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_tabs.add(self._ui_tab2)
         self._ui_file_img_lbl = ttk.Label(self._ui_tab2)
         self._ui_file_img = ttk.Entry(self._ui_tab2)
+        # noinspection PyProtectedMember
+        Hovertip(self._ui_file_img, text=cfg_default._img_stack_doc)
         self._ui_file_img_btn = ttk.Button(self._ui_tab2)
         self._ui_peakfit = ttk.Button(self._ui_tab2)
         self._ui_no_fiji_lbl = ttk.Label(self._ui_tab2)
@@ -128,6 +134,8 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_fmt_loc.bind(
             '<FocusOut>', lambda _e: self._on_fmt_loc_leave())
         self._ui_open[COMMAND] = self._on_open
+        self._ui_file_img.bind(
+            '<FocusOut>', lambda _e: self._on_file_img_leave())
         self._ui_file_img_btn[COMMAND] = self._on_get_file_img
         self._ui_peakfit[COMMAND] = self._on_run_peakfit
         self._ui_summary.bind(
@@ -292,14 +300,20 @@ class CsvFrame(ttk.Frame, IStage):
             self._var_file_loc.set(file_name)
             self._model.cfg.csv_file = Path(file_name)
 
+    def _on_fmt_loc_leave(self):
+        fmt = self._var_fmt_loc.get()
+        self._model.cfg.csv_format = smlfm.LocalisationFile.Format[fmt]
+
+    def _on_file_img_leave(self):
+        file_name = self._var_file_img.get()
+        self._model.cfg.img_stack = Path(file_name) if file_name else None
+
     def _on_get_file_img(self):
         initial_dir = None
         initial_file = None
-        file_name = self._var_file_img.get()
-        if file_name:
-            path = Path(file_name)
-            initial_dir = path.parent
-            initial_file = path.name
+        if self._model.cfg.img_stack is not None:
+            initial_dir = self._model.cfg.img_stack.parent
+            initial_file = self._model.cfg.img_stack.name
         else:
             if self._model.cfg.csv_file is not None:
                 initial_dir = self._model.cfg.csv_file.parent
@@ -312,13 +326,10 @@ class CsvFrame(ttk.Frame, IStage):
             initialfile=initial_file)
         if file_name:
             self._var_file_img.set(file_name)
-            csv_file = Path(file_name + '.csv')
-            self._var_file_loc.set(str(csv_file))
-            self._model.cfg.csv_file = csv_file
-
-    def _on_fmt_loc_leave(self):
-        fmt = self._var_fmt_loc.get()
-        self._model.cfg.csv_format = smlfm.LocalisationFile.Format[fmt]
+            if self._model.cfg.csv_file is None:
+                csv_file = Path(file_name + '.csv')
+                self._var_file_loc.set(str(csv_file))
+                self._model.cfg.csv_file = csv_file
 
     def _on_open(self):
         if self._model.cfg.csv_file is None:
@@ -375,11 +386,57 @@ class CsvFrame(ttk.Frame, IStage):
             wnd.withdraw()
 
     def _on_run_peakfit(self):
-        # TODO: _ui_peakfit - validate paths and run PeakFit.
-        #       When returned without error call self.stage_start_update()
-        #       Does PeakFit plugin block the the UI?
-        # file_name = self._var_file_img.get()
-        pass
+        if self._model.cfg.img_stack is None:
+            messagebox.showerror(
+                title='File Error',
+                message='The path to image stack file cannot be empty.')
+            return
+
+        if not self._model.cfg.img_stack.exists():
+            messagebox.showerror(
+                title='File Error',
+                message='The image stack file does not exist:',
+                detail=self._model.cfg.img_stack)
+            return
+
+        self._start_peakfit()
+
+    def _start_peakfit(self):
+        self.stage_invalidate()
+        self._model.stages_ui_updating(True)
+        self.winfo_toplevel().configure(cursor='watch')
+
+        def _update_thread_fn():
+            try:
+                self._model.run_peakfit()
+            except BaseException as ex:
+                self._update_thread_err = str(ex)
+                tb.print_exception(None, ex, ex.__traceback__)
+
+            def _update_done():
+                self._update_thread = None
+                self.winfo_toplevel().configure(cursor='')
+
+                self._model.stages_ui_updating(False)
+
+                if self._update_thread_err is not None:
+                    err = self._update_thread_err
+                    self._update_thread_err = None
+
+                    messagebox.showerror(
+                        title='Fiji Error',
+                        message=f'The PeakFit plugin failed with:\n{str(err)}',
+                        detail=self._model.cfg.img_stack)
+
+                    self.stage_invalidate()
+                    return
+
+                self.stage_start_update()
+
+            self._model.invoke_on_gui_thread_async(_update_done)
+
+        self._update_thread = Thread(target=_update_thread_fn, daemon=True)
+        self._update_thread.start()
 
     # Executed on thread
     def _update_task(self):
