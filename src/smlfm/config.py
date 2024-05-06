@@ -24,13 +24,15 @@ class Config:
     _fiji_jvm_opts_doc: str = (
         'A list of space separated options for Java Virtual Machine started by Fiji.')
     fiji_jvm_opts: str = '-Xmx10g'
+    _img_stack_doc: str = (
+        'A path to image stack file to be analyzed by PeakFit plugin in Fiji.\n'
+        'If the Fiji application is not detected, this value is ignored.\n'
+        'Otherwise, the output from PeakFit plugin is stored in configured CSV file.')
+    img_stack: Optional[Path] = None
     _csv_file_doc: str = (
         'A path to CSV/XLS file with localisations.\n'
-        'A CLI application requires this to be a valid path to existing file.\n'
-        'A GUI application can call PeakFit plugin from Fiji and use this\n'
-        'path to say Fiji where to store the PeakFit output.\n'
-        'The \'null\' value is allowed only when loading from JSON to allow\n'
-        'the application ask user interactively.')
+        'If the image stack file is given and if Fiji application is found,\n'
+        'this file is overwritten with PeakFit output.')
     csv_file: Optional[Path] = None
     _csv_format_doc: str = (
         'A format of CSV file with localisations.\n'
