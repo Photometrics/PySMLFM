@@ -21,11 +21,14 @@ def app():
     # 0. Handle CLI options
 
     cfg_file = None
+    img_stack = None
     csv_file = None
     for arg in sys.argv[1:]:
         a = arg.casefold()
         if a.endswith('.json'):
             cfg_file = Path(arg)
+        elif a.endswith('.tiff') or a.endswith('.tif'):
+            img_stack = Path(arg)
         elif a.endswith('.csv') or a.endswith('.xls'):
             csv_file = Path(arg)
         else:
@@ -39,12 +42,17 @@ def app():
     else:
         cfg_dump = pkgutil.get_data(
             smlfm.__name__, 'data/default-config.json').decode()
+        print('WARNING: Loaded default configuration')
 
     cfg = smlfm.Config.from_json(cfg_dump)
 
-    # CLI option takes precedence for CSV file
+    # CLI option takes precedence
+    if img_stack is not None:
+        cfg.img_stack = img_stack
     if csv_file is not None:
         cfg.csv_file = csv_file
+
+    # TODO: Integrate Fiji PeakFit to CLI app and run it if image stack is given
 
     if cfg.csv_file is None:
         print('ERROR: The CSV file not set')

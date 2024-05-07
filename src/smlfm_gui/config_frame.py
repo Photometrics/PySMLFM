@@ -361,6 +361,9 @@ class ConfigFrame(ttk.Frame, IStage):
             self._model.detect_fiji()
 
         # CLI option takes precedence
+        if self._cli_overrides or self._model.cfg.img_stack is None:
+            if self._model.cli_img_stack is not None:
+                self._model.cfg.img_stack = self._model.cli_img_stack
         if self._cli_overrides or self._model.cfg.csv_file is None:
             if self._model.cli_csv_file is not None:
                 self._model.cfg.csv_file = self._model.cli_csv_file
