@@ -34,6 +34,7 @@ class CsvFrame(ttk.Frame, IStage):
         self._ui_frm = ttk.LabelFrame(self, labelwidget=self._ui_frm_lbl)
 
         self._ui_tabs = ttk.Notebook(self._ui_frm)
+        self._ui_tabs_switched = False  # Might be switched once to _ui_tab2
 
         self._ui_tab1 = ttk.Frame(self._ui_tabs)
         self._ui_tabs.add(self._ui_tab1)
@@ -115,7 +116,7 @@ class CsvFrame(ttk.Frame, IStage):
                                 image=self._model.icons.open,
                                 compound=tk.LEFT)
         self._ui_tabs.tab(self._ui_tab2,
-                          text='I have image stack only',
+                          text='I have image stack',
                           image=self._model.icons.csv_stack,
                           compound=tk.LEFT)
         self._ui_file_img_lbl[TEXT] = 'Image stack:'
@@ -227,7 +228,15 @@ class CsvFrame(ttk.Frame, IStage):
         if self._model.cfg is not None:
             if self._model.cfg.csv_file is not None:
                 self._var_file_loc.set(str(self._model.cfg.csv_file))
+
             self._var_fmt_loc.set(self._model.cfg.csv_format.name)
+
+            if self._model.cfg.img_stack is not None:
+                self._var_file_img.set(str(self._model.cfg.img_stack))
+                if self._model.has_fiji and not self._ui_tabs_switched:
+                    self._ui_tabs.select(self._ui_tab2)
+            self._ui_tabs_switched = True
+
         if self._model.has_fiji:
             self._ui_no_fiji_lbl.grid_forget()
 
@@ -326,10 +335,7 @@ class CsvFrame(ttk.Frame, IStage):
             initialfile=initial_file)
         if file_name:
             self._var_file_img.set(file_name)
-            if self._model.cfg.csv_file is None:
-                csv_file = Path(file_name + '.csv')
-                self._var_file_loc.set(str(csv_file))
-                self._model.cfg.csv_file = csv_file
+            self._model.cfg.img_stack = Path(file_name)
 
     def _on_open(self):
         if self._model.cfg.csv_file is None:
@@ -399,12 +405,21 @@ class CsvFrame(ttk.Frame, IStage):
                 detail=self._model.cfg.img_stack)
             return
 
+        if self._model.cfg.csv_file is None:
+            file_name = str(self._model.cfg.img_stack) + '.csv'
+            self._var_file_loc.set(file_name)
+            self._model.cfg.csv_file = Path(file_name)
+
+        self._model.cfg.csv_format = smlfm.LocalisationFile.Format.PEAKFIT
+        self._var_fmt_loc.set(self._model.cfg.csv_format.name)
+
         self._start_peakfit()
 
     def _start_peakfit(self):
         self.stage_invalidate()
         self._model.stages_ui_updating(True)
         self.winfo_toplevel().configure(cursor='watch')
+        self._var_summary.set('Searching localisations...')
 
         def _update_thread_fn():
             try:
@@ -427,6 +442,15 @@ class CsvFrame(ttk.Frame, IStage):
                         title='Fiji Error',
                         message=f'The PeakFit plugin failed with:\n{str(err)}',
                         detail=self._model.cfg.img_stack)
+
+                    self.stage_invalidate()
+                    return
+
+                if not self._model.cfg.csv_file.exists():
+                    messagebox.showerror(
+                        title='File Error',
+                        message='The CSV file does not exist:',
+                        detail=self._model.cfg.csv_file)
 
                     self.stage_invalidate()
                     return
