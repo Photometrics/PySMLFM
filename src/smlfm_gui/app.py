@@ -25,7 +25,6 @@ class App(tk.Tk):
         # Now it is ready to become visible
         self.deiconify()
 
-        self._model.stage_invalidate(StageType.CONFIG)
         self._model.stage_start_update(StageType.CONFIG)
 
 
