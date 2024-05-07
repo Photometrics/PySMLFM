@@ -1,5 +1,13 @@
 # Single Molecule Light Field Microscopy Reconstruction (PySMLFM)
 
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Photometrics/PySMLFM?color=green)](https://github.com/Photometrics/PySMLFM/releases/latest)
+[![GitHub all releases](https://img.shields.io/github/downloads/Photometrics/PySMLFM/latest/total?color=blue&label=downloads)](https://tooomm.github.io/github-release-stats/?username=Photometrics&repository=PySMLFM)
+[![GitHub all releases](https://img.shields.io/github/downloads/Photometrics/PySMLFM/total?color=blue&label=total%20downloads)](https://tooomm.github.io/github-release-stats/?username=Photometrics&repository=PySMLFM)  
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Percentage of issues still open")
+![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FPhotometrics%2FPySMLFM%2Fmain%2Fpyproject.toml?color=orange)
+---
+
 A Python solution inspired by MATLAB scripts in
 [hexSMLFM](https://github.com/TheLeeLab/hexSMLFM) project.
 
