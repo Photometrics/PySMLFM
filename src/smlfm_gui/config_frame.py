@@ -179,11 +179,13 @@ class ConfigFrame(ttk.Frame, IStage):
                     # self._show_previews()
 
                     self._model.stage_ui_init(self._stage_type_next)
+                    # Automatically start CSV parsing only if configuration file
+                    # is not the default, CSV file is set, but image stack not
                     if (not self._update_from_settings
-                            or not self._cli_overrides
-                            or self._model.cli_cfg_file is not None):
-                        if self._model.cfg.csv_file is not None:
-                            self._model.stage_start_update(self._stage_type_next)
+                            and self._model.cfg_file is not None
+                            and self._model.cfg.csv_file is not None
+                            and self._model.cfg.img_stack is None):
+                        self._model.stage_start_update(self._stage_type_next)
 
                 self._cli_overrides = False
                 self._settings_apply = False
@@ -195,13 +197,13 @@ class ConfigFrame(ttk.Frame, IStage):
         self._update_thread.start()
 
     def stage_ui_init(self):
+        # CLI option takes precedence
+        if self._cli_overrides:
+            if self._model.cli_cfg_file is not None:
+                self._model.cfg_file = self._model.cli_cfg_file
+
         if self._model.cfg_file is not None:
             self._var_file.set(str(self._model.cfg_file))
-        else:
-            if self._cli_overrides:
-                if self._model.cli_cfg_file is not None:
-                    self._model.cfg_file = self._model.cli_cfg_file
-                    self._var_file.set(str(self._model.cfg_file))
 
         self._ui_update_done()
 
@@ -339,11 +341,6 @@ class ConfigFrame(ttk.Frame, IStage):
             self._model.invoke_on_gui_thread_async(
                 self._var_summary.set, 'Loading configuration...')
 
-            # CLI option takes precedence
-            if self._cli_overrides:
-                if self._model.cli_cfg_file is not None:
-                    self._model.cfg_file = self._model.cli_cfg_file
-
             if self._model.cfg_file is not None:
                 with open(self._model.cfg_file, 'rt') as file:
                     cfg_dump = file.read()
@@ -353,13 +350,6 @@ class ConfigFrame(ttk.Frame, IStage):
 
             self._model.cfg = smlfm.Config.from_json(cfg_dump)
 
-        # Skip Fiji detection during first update, unless given cfg file via CLI
-        if (not self._cli_overrides
-                or self._model.cli_cfg_file is not None):
-            self._model.invoke_on_gui_thread_async(
-                self._var_summary.set, 'Detecting Fiji...')
-            self._model.detect_fiji()
-
         # CLI option takes precedence
         if self._cli_overrides or self._model.cfg.img_stack is None:
             if self._model.cli_img_stack is not None:
@@ -367,3 +357,7 @@ class ConfigFrame(ttk.Frame, IStage):
         if self._cli_overrides or self._model.cfg.csv_file is None:
             if self._model.cli_csv_file is not None:
                 self._model.cfg.csv_file = self._model.cli_csv_file
+
+        self._model.invoke_on_gui_thread_async(
+            self._var_summary.set, 'Detecting Fiji...')
+        self._model.detect_fiji()
