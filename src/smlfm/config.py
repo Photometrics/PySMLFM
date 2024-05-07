@@ -260,26 +260,20 @@ class Config:
                 continue
 
             value = getattr(cfg, field.name)
-            if field.type is Path and value is not None:
-                cfg.__setattr__(field.name, Path(value))
-            elif field.type is Optional[Path] and value is not None:
-                cfg.__setattr__(field.name, Path(value))
+            if repr(field.type) == repr(Optional[Path]):
+                if value is not None:
+                    cfg.__setattr__(field.name, Path(value))
+            elif repr(field.type) == repr(Optional[Tuple[float, float]]):
+                if value is not None:
+                    cfg.__setattr__(field.name, tuple(value))
+            elif repr(field.type) == repr(npt.NDArray[float]):
+                cfg.__setattr__(field.name, np.array(value))
             elif field.type is LocalisationFile.Format:
                 cfg.__setattr__(field.name, LocalisationFile.Format[value])
             elif field.type is Localisations.AlphaModel:
                 cfg.__setattr__(field.name, Localisations.AlphaModel[value])
             elif field.type is MicroLensArray.LatticeType:
                 cfg.__setattr__(field.name, MicroLensArray.LatticeType[value])
-            elif (False  # field.type is np.ndarray  # NDArray is deserialized to list
-                  or field.name == 'mla_centre'
-                  or field.name == 'mla_offset'):
-                cfg.__setattr__(field.name, np.array(value))
-            elif (False  # field.type is Tuple  # Tuple is deserialized to list
-                  or field.name == 'filter_rhos'
-                  or field.name == 'filter_spot_sizes'
-                  or field.name == 'filter_photons'):
-                if value is not None:
-                    cfg.__setattr__(field.name, tuple(value))
             elif field.type is Fitting.FitParams:
                 cfg.__setattr__(field.name, Fitting.FitParams(**value))
             elif field.type is Fitting.AberrationParams:
