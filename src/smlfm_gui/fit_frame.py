@@ -460,7 +460,7 @@ class FitFrame(ttk.Frame, IStage):
             nonlocal cfg_dump_old
             cfg_dump_new = self._model.cfg.to_json()
             if (cfg_dump_old != cfg_dump_new
-                    # or not self._model.stage_is_active(self._stage_type_next)):
+                    # not self._model.stage_is_active(self._stage_type_next)
                     or self._model.locs_3d is None):
                 cfg_dump_old = cfg_dump_new
                 self.stage_start_update()
