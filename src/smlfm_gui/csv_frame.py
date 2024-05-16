@@ -233,11 +233,11 @@ class CsvFrame(ttk.Frame, IStage):
 
             if self._model.cfg.img_stack is not None:
                 self._var_file_img.set(str(self._model.cfg.img_stack))
-                if self._model.has_fiji and not self._ui_tabs_switched:
+                if self._model.fiji_app.has_fiji and not self._ui_tabs_switched:
                     self._ui_tabs.select(self._ui_tab2)
             self._ui_tabs_switched = True
 
-        if self._model.has_fiji:
+        if self._model.fiji_app.has_fiji:
             self._ui_no_fiji_lbl.grid_forget()
 
         self._ui_update_done()
@@ -271,11 +271,10 @@ class CsvFrame(ttk.Frame, IStage):
             self._ui_fmt_loc.configure(state=READONLY)
             self._ui_open.configure(state=tk.NORMAL)
 
-            if self._model.has_imagej:
-                if self._model.has_fiji:
-                    self._ui_file_img.configure(state=tk.NORMAL)
-                    self._ui_file_img_btn.configure(state=tk.NORMAL)
-                    self._ui_peakfit.configure(state=tk.NORMAL)
+            if self._model.fiji_app.has_fiji:
+                self._ui_file_img.configure(state=tk.NORMAL)
+                self._ui_file_img_btn.configure(state=tk.NORMAL)
+                self._ui_peakfit.configure(state=tk.NORMAL)
 
             if self._model.stage_is_active(self._stage_type_next):
                 self._ui_preview.configure(state=tk.NORMAL)
@@ -423,7 +422,8 @@ class CsvFrame(ttk.Frame, IStage):
 
         def _update_thread_fn():
             try:
-                self._model.run_peakfit()
+                self._model.fiji_app.run_peakfit(
+                    self._model.cfg.img_stack, self._model.cfg.csv_file)
             except BaseException as ex:
                 self._update_thread_err = str(ex)
                 tb.print_exception(None, ex, ex.__traceback__)

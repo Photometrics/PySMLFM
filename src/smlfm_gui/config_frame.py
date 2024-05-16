@@ -360,4 +360,13 @@ class ConfigFrame(ttk.Frame, IStage):
 
         self._model.invoke_on_gui_thread_async(
             self._var_summary.set, 'Detecting Fiji...')
-        self._model.detect_fiji()
+        has_fiji = self._model.fiji_app.detect_fiji(
+            self._model.cfg.fiji_dir, self._model.cfg.fiji_jvm_opts)
+        if has_fiji is None:
+            print('WARNING: Restart the application to apply new settings')
+            self._model.invoke_on_gui_thread_async(
+                messagebox.showwarning,
+                kwargs=dict(
+                    title='Warning',
+                    message='Restart the application to apply new settings.',
+                    detail='Java can be started only once.'))

@@ -1,4 +1,5 @@
 from .config import Config
+from .fiji_app import FijiApp
 from .fitting import Fitting
 from .fourier_microscope import FourierMicroscope
 from .graphs import *

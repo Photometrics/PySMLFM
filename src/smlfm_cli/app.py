@@ -52,7 +52,24 @@ def app():
     if csv_file is not None:
         cfg.csv_file = csv_file
 
-    # TODO: Integrate Fiji PeakFit to CLI app and run it if image stack is given
+    if cfg.img_stack is not None:
+        if not cfg.img_stack.exists():
+            print(f'ERROR: The image stack file "{cfg.img_stack}" does not exist')
+            sys.exit(3)
+
+        fiji_app = smlfm.FijiApp()
+        if not fiji_app.has_imagej:
+            print('PyImageJ not installed')
+        else:
+            print('Detecting Fiji...')
+            fiji_app.detect_fiji(cfg.fiji_dir, cfg.fiji_jvm_opts)
+            if not fiji_app.has_fiji:
+                print('Fiji not detected')
+            else:
+                if cfg.csv_file is None:
+                    cfg.csv_file = Path(str(cfg.img_stack) + '.csv')
+                cfg.csv_format = smlfm.LocalisationFile.Format.PEAKFIT
+                fiji_app.run_peakfit(cfg.img_stack, cfg.csv_file)
 
     if cfg.csv_file is None:
         print('ERROR: The CSV file not set')

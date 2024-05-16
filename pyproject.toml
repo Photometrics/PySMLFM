@@ -1,6 +1,6 @@
 [project]
 name = "PySMLFM"
-version = "0.5.4-beta"
+version = "0.6.0-beta"
 description = "Single Molecule Light Field Microscopy Reconstruction"
 authors = [
     {name = "Teledyne Photometrics"},
