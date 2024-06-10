@@ -28,9 +28,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install the package
+    - name: Update pip
       run: |
         python -m pip install --upgrade pip
+
+    - name: Install the package
+      run: |
         python -m pip install -e '.[dev]'
 
     - name: Test with pytest
@@ -44,6 +47,14 @@ jobs:
       - uses: actions/checkout@v2
 
       - uses: actions/setup-python@v3
+
+      - name: Update pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install the package
+        run: |
+          python -m pip install -e '.[dev]'
 
       - name: Validate pyproject.toml
         run: |
