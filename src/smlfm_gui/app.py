@@ -2,7 +2,7 @@
 import tkinter as tk
 
 from .app_model import AppModel
-from .consts import *
+from .consts import StageType
 
 
 class App(tk.Tk):

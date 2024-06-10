@@ -3,7 +3,7 @@ from tkinter import ttk
 from typing import Callable, Optional
 
 from .app_model import AppModel
-from .consts import *
+from .consts import READONLY
 
 
 # Inspired by tkinter.simpledialog.Dialog

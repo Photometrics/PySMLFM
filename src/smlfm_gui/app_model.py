@@ -11,7 +11,7 @@ import numpy.typing as npt
 import smlfm
 
 from .assets import Icons
-from .consts import *
+from .consts import GraphType, StageType
 from .figure_window import FigureWindow
 
 

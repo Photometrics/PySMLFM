@@ -8,7 +8,7 @@ import numpy as np
 import smlfm
 from .app_model import AppModel
 from .cfg_dialog import CfgDialog
-from .consts import *
+from .consts import READONLY
 
 
 class FilterCfgDialog(CfgDialog):

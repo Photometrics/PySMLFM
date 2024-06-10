@@ -14,7 +14,7 @@ import smlfm
 import smlfm.graphs
 
 from .app_model import AppModel, IStage
-from .consts import *
+from .consts import COMMAND, IMAGE, TEXTVARIABLE, VARIABLE, GraphType, StageType
 from .figure_window import FigureWindow
 from .filter_cfg_dialog import FilterCfgDialog
 

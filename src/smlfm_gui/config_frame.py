@@ -10,7 +10,7 @@ from typing import Optional
 import smlfm
 
 from .app_model import AppModel, IStage
-from .consts import *
+from .consts import COMMAND, IMAGE, TEXT, TEXTVARIABLE, VARIABLE, StageType
 from .config_cfg_dialog import ConfigCfgDialog
 
 
