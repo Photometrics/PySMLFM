@@ -149,18 +149,20 @@ class FijiApp:
             'lut': 'Fire',
         })
 
-        was_log_window_open = self.ij.WindowManager.getWindow("Log") is not None  # pylint: disable=no-member
+        # pylint: disable=no-member
+        was_log_window_open = self.ij.WindowManager.getWindow("Log") is not None
 
-        # Apply our configuration
-        self.ij.py.run_plugin('Fit Configuration', args=peakfit_args)  # pylint: disable=no-member
-        # Allow user to change the configuration
-        self.ij.py.run_plugin('Fit Configuration')  # pylint: disable=no-member
-        # Run the plugin code on given stack
-        self.ij.py.run_plugin('Peak Fit', args=peakfit_args, imp=j_imp_stack)  # pylint: disable=no-member
+        # Apply our configuration # pylint: disable=no-member
+        self.ij.py.run_plugin('Fit Configuration', args=peakfit_args)
+        # Allow user to change the configuration # pylint: disable=no-member
+        self.ij.py.run_plugin('Fit Configuration')
+        # Run the plugin code on given stack # pylint: disable=no-member
+        self.ij.py.run_plugin('Peak Fit', args=peakfit_args, imp=j_imp_stack)
 
         # Close Log window if it wasn't open before Peak Fit
         if not was_log_window_open:
-            log_window = self.ij.WindowManager.getWindow("Log")  # pylint: disable=no-member
+            # pylint: disable=no-member
+            log_window = self.ij.WindowManager.getWindow("Log")
             if log_window is not None:
                 log_window.setVisible(False)
 
