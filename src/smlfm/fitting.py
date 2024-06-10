@@ -376,7 +376,8 @@ class Fitting:
     @staticmethod
     def _get_forward_model_error(model: npt.NDArray[float],
                                  points: npt.NDArray[float],
-                                 rho_scaling: float):
+                                 rho_scaling: float
+                                 ) -> npt.NDArray[float]:
         """TODO: Add documentation.
 
         Args:
@@ -406,7 +407,8 @@ class Fitting:
     def _group_localisations(seed: npt.NDArray[float],
                              in_points: npt.NDArray[float],
                              fit_params: FitParams,
-                             rho_scaling: float):
+                             rho_scaling: float
+                             ) -> Tuple[npt.NDArray[float], int, int]:
         """TODO: Add documentation.
 
         Args:
