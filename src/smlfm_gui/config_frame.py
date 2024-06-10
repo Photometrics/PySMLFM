@@ -5,7 +5,7 @@ from idlelib.tooltip import Hovertip
 from pathlib import Path
 from threading import Thread
 from tkinter import filedialog, messagebox, ttk
-from typing import Union
+from typing import Optional
 
 import smlfm
 
@@ -109,12 +109,12 @@ class ConfigFrame(ttk.Frame, IStage):
         self._var_summary = tk.StringVar()
         self._ui_summary_lbl[TEXTVARIABLE] = self._var_summary
 
-        self._update_thread: Union[Thread, None] = None
-        self._update_thread_err: Union[str, None] = None
+        self._update_thread: Optional[Thread] = None
+        self._update_thread_err: Optional[str] = None
 
         self._cli_overrides: bool = True  # Resets after first update
 
-        self._settings_dlg: Union[ConfigCfgDialog, None] = None
+        self._settings_dlg: Optional[ConfigCfgDialog] = None
         self._settings_apply: bool = False
         self._update_from_settings: bool = False
 

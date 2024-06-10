@@ -1,7 +1,7 @@
 import dataclasses
 import multiprocessing as mp
 from dataclasses import dataclass
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -30,7 +30,7 @@ class Fitting:
         # A min. number of views the candidate is seen to count it.
         min_views: int
         # A calibration factor between optical and physical Z.
-        z_calib: Union[float, None] = None
+        z_calib: Optional[float] = None
 
     @dataclass
     class AberrationParams:
@@ -59,8 +59,8 @@ class Fitting:
     def light_field_fit(locs_2d: npt.NDArray[float],
                         rho_scaling: float,
                         fit_params: FitParams,
-                        abort_event: Union[mp.Event, None] = None,
-                        progress_func: Union[Callable[[int, int, int], None], None] = None,
+                        abort_event: Optional[mp.Event] = None,
+                        progress_func: Optional[Callable[[int, int, int], None]] = None,
                         progress_step: int = 1000,
                         worker_count: int = 0
                         ) -> Tuple[npt.NDArray[float], List[FitData]]:
@@ -74,10 +74,10 @@ class Fitting:
                 A scaling factor to convert microns in image plane to rho.
             fit_params (FitParams):
                 A configuration for fit detection.
-            abort_event (Union[mp.Event, None]):
+            abort_event (Optional[mp.Event]):
                 An event to be periodically checked (without blocking).
                 If set, the processing is aborted and function returns.
-            progress_func (Union[Callable[[int, int, int], None], None]):
+            progress_func (Optional[Callable[[int, int, int], None]]):
                 A callback function for reporting progress. The function gets
                 three arguments. First is a frame number of currently processed
                 frame, the second and third are min. and max. frame numbers
@@ -134,7 +134,7 @@ class Fitting:
 
         processes = worker_count if worker_count > 0 else None
         with mp.Pool(processes=processes) as pool:
-            procs = [Union[mp.Process, None]] * task_count
+            procs = [Optional[mp.Process]] * task_count
 
             for idx in range(task_count):
                 fit_params_n = dataclasses.replace(
@@ -170,8 +170,8 @@ class Fitting:
     def _light_field_fit_task(locs_2d: npt.NDArray[float],
                               rho_scaling: float,
                               fit_params: FitParams,
-                              abort_event: Union[mp.Event, None] = None,
-                              progress_func: Union[Callable[[int, int, int], None], None] = None,
+                              abort_event: Optional[mp.Event] = None,
+                              progress_func: Optional[Callable[[int, int, int], None]] = None,
                               progress_step: int = 1000
                               ) -> Tuple[npt.NDArray[float], List[FitData]]:
         """A task executed multiple times in separate process to speed up."""

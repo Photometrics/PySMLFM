@@ -1,6 +1,6 @@
 from enum import Enum, unique
 from pathlib import Path
-from typing import Union
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -51,9 +51,9 @@ class LocalisationFile:
         self.csv_file = csv_file
         self.file_format = file_format
         self.pixel_size: float = 1.0
-        self.data: Union[npt.NDArray[float], None] = None
+        self.data: Optional[npt.NDArray[float]] = None
 
-        self._raw_data: Union[npt.NDArray[float], None] = None
+        self._raw_data: Optional[npt.NDArray[float]] = None
 
     def read(self) -> None:
         """Parses the CSV file."""

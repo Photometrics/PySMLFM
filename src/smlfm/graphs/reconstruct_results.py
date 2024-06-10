@@ -1,5 +1,5 @@
 from pathlib import Path, PurePath
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -10,8 +10,8 @@ from ..graphs import draw_3d_locs, draw_occurrences, draw_histogram
 
 def reconstruct_results(fig1: Figure, fig2: Figure, fig3: Figure,
                         locs3d_data_or_file: Union[Path, npt.NDArray[float]],
-                        max_lateral_err: Union[float, None] = None,
-                        min_view_count: Union[int, None] = None
+                        max_lateral_err: Optional[float] = None,
+                        min_view_count: Optional[int] = None
                         ) -> Tuple[Figure, Figure, Figure]:
     """Generates 3 final figures with results from stored 3D localisations.
 
@@ -21,8 +21,10 @@ def reconstruct_results(fig1: Figure, fig2: Figure, fig3: Figure,
         fig1 (Figure): A figure for 3D view.
         locs3d_data_or_file (Path or npt.NDArray[float]):
             A CSV file path or a numpy array with 3D localisations.
-        max_lateral_err (float): Max. lateral error to show (in microns).
-        min_view_count(int): Shown only points with given min. number of views.
+        max_lateral_err (Optional[float]):
+            Max. lateral error to show (in microns).
+        min_view_count(Optional[int]):
+            Shown only points with given min. number of views.
 
     Returns:
         Returns a tuple with 3 figures: occurrences, histogram and 3D view.

@@ -4,7 +4,7 @@ import tkinter as tk
 from pathlib import Path
 from queue import Empty, SimpleQueue
 from tkinter import ttk
-from typing import Dict, Union
+from typing import Dict, Optional
 
 import numpy.typing as npt
 
@@ -20,7 +20,7 @@ class IStage:
         """Returns the stage type."""
         raise NotImplementedError('Subclass must implement this')
 
-    def stage_type_next(self) -> Union[StageType, None]:
+    def stage_type_next(self) -> Optional[StageType]:
         """Returns the next stage type."""
         raise NotImplementedError('Subclass must implement this')
 
@@ -138,35 +138,35 @@ class AppModel:
         self.icons = Icons()
 
         self._root = None
-        self._min_root_width: Union[int, None] = None
-        self._gui_queue: Union[SimpleQueue, None] = None
+        self._min_root_width: Optional[int] = None
+        self._gui_queue: Optional[SimpleQueue] = None
 
         self.fiji_app = smlfm.FijiApp()
 
         self.save_timestamp = None
 
-        self.cli_cfg_file: Union[Path, None] = None
-        self.cli_img_stack: Union[Path, None] = None
-        self.cli_csv_file: Union[Path, None] = None
+        self.cli_cfg_file: Optional[Path] = None
+        self.cli_img_stack: Optional[Path] = None
+        self.cli_csv_file: Optional[Path] = None
 
-        self.cfg_file: Union[Path, None] = None
-        self.cfg: Union[smlfm.Config, None] = None
+        self.cfg_file: Optional[Path] = None
+        self.cfg: Optional[smlfm.Config] = None
 
-        self.csv: Union[smlfm.LocalisationFile, None] = None
-        self.lfm: Union[smlfm.FourierMicroscope, None] = None
-        self.mla: Union[smlfm.MicroLensArray, None] = None
-        self.lfl: Union[smlfm.Localisations, None] = None
+        self.csv: Optional[smlfm.LocalisationFile] = None
+        self.lfm: Optional[smlfm.FourierMicroscope] = None
+        self.mla: Optional[smlfm.MicroLensArray] = None
+        self.lfl: Optional[smlfm.Localisations] = None
 
-        self.locs_3d: Union[npt.NDArray[float], None] = None
+        self.locs_3d: Optional[npt.NDArray[float]] = None
 
-        self.graphs: Dict[GraphType, Union[FigureWindow, None]] = dict()
+        self.graphs: Dict[GraphType, Optional[FigureWindow]] = dict()
         for t in GraphType:
             self.graphs[t] = None
 
-        self._ui_mains: Dict[StageType, Union[ttk.Frame, None]] = dict()
-        self._ui_numbers: Dict[StageType, Union[ttk.Label, None]] = dict()
-        self._ui_frames: Dict[StageType, Union[ttk.Frame, None]] = dict()
-        self._stages: Dict[StageType, Union[IStage, None]] = dict()
+        self._ui_mains: Dict[StageType, Optional[ttk.Frame]] = dict()
+        self._ui_numbers: Dict[StageType, Optional[ttk.Label]] = dict()
+        self._ui_frames: Dict[StageType, Optional[ttk.Frame]] = dict()
+        self._stages: Dict[StageType, Optional[IStage]] = dict()
         for t in StageType:
             self._ui_numbers[t] = None
             self._ui_frames[t] = None
@@ -265,32 +265,32 @@ class AppModel:
         except Empty:
             pass
 
-    def stage_enabled(self, st: Union[StageType, None], enabled: bool):
+    def stage_enabled(self, st: Optional[StageType], enabled: bool):
         if st is not None:
             self._ui_numbers[st].configure(state=tk.NORMAL if enabled else tk.DISABLED)
 
-    def stage_is_active(self, st: Union[StageType, None]):
+    def stage_is_active(self, st: Optional[StageType]):
         if st is not None:
             return self._stages[st].stage_is_active()
         return False
 
-    def stage_invalidate(self, st: Union[StageType, None]):
+    def stage_invalidate(self, st: Optional[StageType]):
         if st is not None:
             self._stages[st].stage_invalidate()
 
-    def stage_start_update(self, st: Union[StageType, None]):
+    def stage_start_update(self, st: Optional[StageType]):
         if st is not None:
             self._stages[st].stage_start_update()
 
-    def stage_ui_init(self, st: Union[StageType, None]):
+    def stage_ui_init(self, st: Optional[StageType]):
         if st is not None:
             self._stages[st].stage_ui_init()
 
-    def stage_ui_flash(self, st: Union[StageType, None]):
+    def stage_ui_flash(self, st: Optional[StageType]):
         if st is not None:
             self._stages[st].stage_ui_flash()
 
-    def stage_ui_updating(self, st: Union[StageType, None], updating: bool):
+    def stage_ui_updating(self, st: Optional[StageType], updating: bool):
         if st is not None:
             self._stages[st].stage_ui_updating(updating)
 

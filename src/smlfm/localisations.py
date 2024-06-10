@@ -2,7 +2,7 @@ import multiprocessing as mp
 import warnings
 from enum import Enum, unique
 from multiprocessing.shared_memory import SharedMemory as mp_SharedMemory
-from typing import Tuple, Union
+from typing import Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -76,10 +76,10 @@ class Localisations:
         # The locs_2d columns 10, 11 remain zeroed
         # The filtered_locs_2d columns 10, 11 are initialized in init_alpha_uv()
 
-        self.filtered_locs_2d: Union[npt.NDArray[float], None] = None
-        self.alpha_model: Union[Localisations.AlphaModel, None] = None
-        self.corrected_locs_2d: Union[npt.NDArray[float], None] = None
-        self.correction: Union[npt.NDArray[float], None] = None
+        self.filtered_locs_2d: Optional[npt.NDArray[float]] = None
+        self.alpha_model: Optional[Localisations.AlphaModel] = None
+        self.corrected_locs_2d: Optional[npt.NDArray[float]] = None
+        self.correction: Optional[npt.NDArray[float]] = None
 
     def assign_to_lenses(self,
                          mla: MicroLensArray,
@@ -156,7 +156,7 @@ class Localisations:
     def init_alpha_uv(self,
                       model: AlphaModel,
                       lfm: FourierMicroscope,
-                      abort_event: Union[mp.Event, None] = None,
+                      abort_event: Optional[mp.Event] = None,
                       worker_count: int = 0
                       ) -> None:
         """TODO: Add documentation.
@@ -165,7 +165,7 @@ class Localisations:
             model (AlphaModel): A model used for mapping.
             lfm (FourierMicroscope):
                 An instance of fourier light field microscope class.
-            abort_event (Union[mp.Event, None]):
+            abort_event (Optional[mp.Event]):
                 An event to be periodically checked (without blocking).
                 If set, the processing is aborted and function returns.
             worker_count (int):
@@ -238,7 +238,7 @@ class Localisations:
                               n: float,
                               m: int,
                               alpha_uv: npt.NDArray[float],
-                              abort_event: Union[mp.Event, None] = None,
+                              abort_event: Optional[mp.Event] = None,
                               worker_count: int = 0
                               ) -> None:
         """TODO: Add documentation."""
@@ -273,7 +273,7 @@ class Localisations:
         try:
             processes = worker_count if worker_count > 0 else None
             with mp.Pool(processes=processes) as pool:
-                procs = [Union[mp.Process, None]] * task_count
+                procs = [Optional[mp.Process]] * task_count
 
                 for idx in range(task_count):
                     i_range_n = range(rows_per_task * idx,
@@ -305,7 +305,7 @@ class Localisations:
                                    na: float,
                                    n: float,
                                    m: int,
-                                   abort_event: Union[mp.Event, None] = None
+                                   abort_event: Optional[mp.Event] = None
                                    ) -> None:
         shm_uv = mp_SharedMemory(
             Localisations._SHM_NAME__PHASE_AVG__UV)
@@ -331,7 +331,7 @@ class Localisations:
                                  n: float,
                                  m: int,
                                  alpha_uv: npt.NDArray[float],
-                                 abort_event: Union[mp.Event, None] = None
+                                 abort_event: Optional[mp.Event] = None
                                  ) -> None:
         ds2 = uv_scaling / 2
 
