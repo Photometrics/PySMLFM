@@ -10,6 +10,7 @@ import numpy as np
 from matplotlib.figure import Figure
 
 import smlfm
+import smlfm.graphs
 
 from .app_model import AppModel, IStage
 from .consts import *

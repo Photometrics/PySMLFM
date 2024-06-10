@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import smlfm
+import smlfm.graphs
 
 
 def app():
