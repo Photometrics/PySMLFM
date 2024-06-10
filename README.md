@@ -222,3 +222,25 @@ To open the saved figures run a command that takes relative path to it like this
 When you use `python` command like above, the prompt will be blocked until all
 graphs are closed. To open the figures without blocking the prompt use `pythonw`
 instead.
+
+## Screenshots
+
+### Main Window
+
+![Main Window](/images/app-gui.png?raw=true)
+
+### Optics Settings Dialog
+
+![Optics Settings Dialog](/images/config-optics.png?raw=true)
+
+### Micro Lens Array Layout
+
+![Micro Lens Array Layout](/images/graph-mla.png?raw=true)
+
+### Filtered Localisations
+
+![Filtered Localisations](/images/graph-locs-filtered.png?raw=true)
+
+### 3D Reconstruction
+
+![3D Reconstruction](/images/graph-3d.png?raw=true)
