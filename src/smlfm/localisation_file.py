@@ -107,7 +107,7 @@ class LocalisationFile:
         csv_header_rows = 0
         csv_delimiter = None  # Default delimiter (whitespaces)
         max_line_len = 16384
-        with open(self.csv_file, 'r') as f:
+        with open(self.csv_file, 'r', encoding='utf-8') as f:
             while True:
                 line = f.readline(max_line_len)
                 if not line:

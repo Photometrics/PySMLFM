@@ -27,7 +27,7 @@ class OutputFiles:
 
     def save_config(self):
         cfg_dump = self.cfg.to_json()
-        with open(self.folder / self.CONFIG_FILE_NAME, 'wt') as file:
+        with open(self.folder / self.CONFIG_FILE_NAME, 'wt', encoding='utf-8') as file:
             file.write(cfg_dump)
 
     def save_csv(self, locs_3d: npt.NDArray[float]):
@@ -64,5 +64,5 @@ class OutputFiles:
             f'    fig3.canvas.manager.set_window_title("3D")\n'
             f'    plt.show()\n'
         )
-        with open(self.folder / self.FIGURES_FILE_NAME, 'wt') as file:
+        with open(self.folder / self.FIGURES_FILE_NAME, 'wt', encoding='utf-8') as file:
             file.write(output_str)

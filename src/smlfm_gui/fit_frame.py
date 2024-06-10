@@ -23,8 +23,10 @@ from .figure_window import FigureWindow
 from .fit_cfg_dialog import FitCfgDialog
 
 
+# pylint: disable=too-many-ancestors,too-many-instance-attributes
 class FitFrame(ttk.Frame, IStage):
 
+    # pylint: disable=too-many-statements
     def __init__(self, master, model: AppModel, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
 
@@ -314,6 +316,7 @@ class FitFrame(ttk.Frame, IStage):
         self._ui_preview_hist.configure(state=tk.DISABLED)
         self._ui_preview_3d.configure(state=tk.DISABLED)
 
+    # pylint: disable=too-many-branches
     def _ui_update_done(self):
         self._ui_update_start()
 

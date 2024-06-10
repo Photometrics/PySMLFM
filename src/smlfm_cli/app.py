@@ -14,6 +14,7 @@ import smlfm
 import smlfm.graphs
 
 
+# pylint: disable=too-many-branches,too-many-statements
 def app():
     tic_total = time.time()
     user_interaction_time = 0
@@ -38,7 +39,7 @@ def app():
     # 1. Prepare configuration
 
     if cfg_file is not None:
-        with open(cfg_file, 'rt') as file:
+        with open(cfg_file, 'rt', encoding='utf-8') as file:
             cfg_dump = file.read()
     else:
         cfg_dump = pkgutil.get_data(

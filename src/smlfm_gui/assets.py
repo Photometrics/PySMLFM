@@ -5,7 +5,9 @@ import tksvg
 from . import __name__ as _pkg_name_
 
 
+# pylint: disable=too-many-instance-attributes
 class Icons:
+    # pylint: disable=too-many-statements
     def __init__(self):
         # TODO: Detect high-DPI screen and adjust the scale factor
         self.svg_scale = 1.0

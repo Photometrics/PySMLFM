@@ -9,6 +9,7 @@ from .app_model import AppModel
 from .cfg_dialog import CfgDialog
 
 
+# pylint: disable=too-many-instance-attributes
 class CorrectCfgDialog(CfgDialog):
 
     def __init__(self, parent, model: AppModel, title: Optional[str] = None,
@@ -68,7 +69,8 @@ class CorrectCfgDialog(CfgDialog):
         super().__init__(parent, model, title, process_cb=process_cb)
 
     # noinspection PyProtectedMember, PyBroadException
-    def body(self, master):
+    # pylint: disable=protected-access
+    def body(self, master) -> tk.BaseWidget:
         ui_tab = ttk.Frame(master)
         row = 0
 
@@ -117,7 +119,7 @@ class CorrectCfgDialog(CfgDialog):
             text=(self.model.cfg._fit_params_aberration_doc + '\n'
                   + self.model.cfg._fit_params_aberration_disparity_max_doc))
         self.ui_widgets.append(self._ui_disparity_max)
-        ui_disparity_max_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_disparity_max_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_disparity_max_lbl.grid(column=0, row=row, sticky=tk.EW)
         self._ui_disparity_max.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -135,7 +137,7 @@ class CorrectCfgDialog(CfgDialog):
             text=(self.model.cfg._fit_params_aberration_doc + '\n'
                   + self.model.cfg._fit_params_aberration_disparity_step_doc))
         self.ui_widgets.append(self._ui_disparity_step)
-        ui_disparity_step_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_disparity_step_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_disparity_step_lbl.grid(column=0, row=row, sticky=tk.EW)
         self._ui_disparity_step.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -153,7 +155,7 @@ class CorrectCfgDialog(CfgDialog):
             text=(self.model.cfg._fit_params_aberration_doc + '\n'
                   + self.model.cfg._fit_params_aberration_dist_search_doc))
         self.ui_widgets.append(self._ui_dist_search)
-        ui_dist_search_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_dist_search_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_dist_search_lbl.grid(column=0, row=row, sticky=tk.EW)
         self._ui_dist_search.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -189,7 +191,7 @@ class CorrectCfgDialog(CfgDialog):
             text=(self.model.cfg._fit_params_aberration_doc + '\n'
                   + self.model.cfg._fit_params_aberration_threshold_doc))
         self.ui_widgets.append(self._ui_threshold)
-        ui_threshold_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_threshold_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_threshold_lbl.grid(column=0, row=row, sticky=tk.EW)
         self._ui_threshold.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -223,7 +225,7 @@ class CorrectCfgDialog(CfgDialog):
             text=(self.model.cfg._aberration_params_doc + '\n'
                   + self.model.cfg._aberration_params_axial_window_doc))
         self.ui_widgets.append(self._ui_axial_window)
-        ui_axial_window_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_axial_window_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_axial_window_lbl.grid(column=0, row=row, sticky=tk.EW)
         self._ui_axial_window.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -255,7 +257,8 @@ class CorrectCfgDialog(CfgDialog):
 
         return self._ui_frames_max  # Control that gets initial focus
 
-    def validate(self):
+    # pylint: disable=too-many-return-statements
+    def validate(self) -> bool:
         if not self.is_int(self._var_frames_min.get()):
             self.initial_focus = self._ui_frames_min
             self._ui_frames_min_tip.showtip()
@@ -306,7 +309,7 @@ class CorrectCfgDialog(CfgDialog):
 
         return super().validate()
 
-    def process(self):
+    def process(self) -> None:
         self.model.cfg.fit_params_aberration.frame_min = (
             int(self._var_frames_min.get()))
         self.model.cfg.fit_params_aberration.frame_max = (

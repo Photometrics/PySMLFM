@@ -11,6 +11,7 @@ from .cfg_dialog import CfgDialog
 from .consts import READONLY
 
 
+# pylint: disable=too-many-instance-attributes
 class OpticsCfgDialog(CfgDialog):
 
     def __init__(self, parent, model: AppModel, title: Optional[str] = None,
@@ -88,7 +89,8 @@ class OpticsCfgDialog(CfgDialog):
         super().__init__(parent, model, title, process_cb=process_cb)
 
     # noinspection PyProtectedMember
-    def body(self, master):
+    # pylint: disable=protected-access,too-many-statements
+    def body(self, master) -> tk.BaseWidget:
         ui_tab = ttk.Frame(master)
         row = 0
 
@@ -112,7 +114,7 @@ class OpticsCfgDialog(CfgDialog):
         self._ui_mla_lens_pitch_tip = Hovertip(
             self._ui_mla_lens_pitch, text=self.model.cfg._mla_lens_pitch_doc)
         self.ui_widgets.append(self._ui_mla_lens_pitch)
-        ui_mla_lens_pitch_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_mla_lens_pitch_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_mla_lens_pitch_lbl.grid(column=0, row=row, sticky=tk.W)
         self._ui_mla_lens_pitch.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -126,7 +128,7 @@ class OpticsCfgDialog(CfgDialog):
         self._ui_mla_optic_size_tip = Hovertip(
             self._ui_mla_optic_size, text=self.model.cfg._mla_optic_size_doc)
         self.ui_widgets.append(self._ui_mla_optic_size)
-        ui_mla_optic_size_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_mla_optic_size_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_mla_optic_size_lbl.grid(column=0, row=row, sticky=tk.W)
         self._ui_mla_optic_size.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -180,7 +182,7 @@ class OpticsCfgDialog(CfgDialog):
         self._ui_mla_offset_y_tip = Hovertip(
             self._ui_mla_offset_y, text=self.model.cfg._mla_offset_doc)
         self.ui_widgets.append(self._ui_mla_offset_y)
-        ui_mla_offset_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_mla_offset_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_mla_offset_lbl.grid(column=0, row=row, sticky=tk.W)
         self._ui_mla_offset_x.grid(column=1, row=row, sticky=tk.EW)
@@ -301,7 +303,7 @@ class OpticsCfgDialog(CfgDialog):
         self._ui_pixel_size_camera_tip = Hovertip(
             self._ui_pixel_size_camera, text=self.model.cfg._pixel_size_camera_doc)
         self.ui_widgets.append(self._ui_pixel_size_camera)
-        ui_pixel_size_camera_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_pixel_size_camera_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_pixel_size_camera_lbl.grid(column=0, row=row, sticky=tk.W)
         self._ui_pixel_size_camera.grid(column=1, row=row, sticky=tk.EW, columnspan=2)
@@ -317,7 +319,8 @@ class OpticsCfgDialog(CfgDialog):
 
         return self._ui_mla_type  # Control that gets initial focus
 
-    def validate(self):
+    # pylint: disable=too-many-return-statements,too-many-branches
+    def validate(self) -> bool:
         if not self.is_float(self._var_mla_lens_pitch.get()):
             self.initial_focus = self._ui_mla_lens_pitch
             self._ui_mla_lens_pitch_tip.showtip()
@@ -381,7 +384,7 @@ class OpticsCfgDialog(CfgDialog):
 
         return super().validate()
 
-    def process(self):
+    def process(self) -> None:
         self.model.cfg.mla_type = smlfm.MicroLensArray.LatticeType[
             self._var_mla_type.get()]
         self.model.cfg.mla_lens_pitch = float(self._var_mla_lens_pitch.get())

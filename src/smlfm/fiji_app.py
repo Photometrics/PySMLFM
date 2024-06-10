@@ -1,20 +1,20 @@
 from pathlib import Path
 from typing import Optional
 
-_has_imagej: bool = True
+_HAS_IMAGEJ: bool = True
 try:
     import imagej
     import jpype
     import scyjava
 except ImportError(imagej):
-    _has_imagej = False
+    _HAS_IMAGEJ = False
 
 
 class FijiApp:
 
     def __init__(self):
         # One time detection during app start if PyImageJ package is installed
-        self.has_imagej: bool = _has_imagej
+        self.has_imagej: bool = _HAS_IMAGEJ
         # Detected during update of CFG stage
         # Once detected, it cannot be deactivated as Java can only be started once
         self.has_fiji: bool = False
@@ -25,7 +25,7 @@ class FijiApp:
         # Modified value will apply only after app restarts
         self.fiji_jvm_opts: str = ''
         # ImageJ/Fiji instance, if detected
-        if _has_imagej:
+        if _HAS_IMAGEJ:
             self.ij: Optional[jpype.JClass] = None
 
     # Can be executed on thread
@@ -50,8 +50,8 @@ class FijiApp:
         except RuntimeError:
             return False
 
-        print(f'ImageJ version(s): {self.ij.getVersion()}')
-        print(f'IJ app version: {self.ij.app().getVersion()}')
+        print(f'ImageJ version(s): {self.ij.getVersion()}')  # pylint: disable=no-member
+        print(f'IJ app version: {self.ij.app().getVersion()}')  # pylint: disable=no-member
 
         self.has_fiji = True
         self.fiji_dir = fiji_dir
@@ -61,12 +61,13 @@ class FijiApp:
 
     # Can be executed on thread
     def run_peakfit(self, img_stack: Path, out_csv_file: Path):
-        j_stack = self.ij.io().open(str(img_stack))
-        j_imp_stack = self.ij.py.to_imageplus(j_stack)
+        j_stack = self.ij.io().open(str(img_stack))  # pylint: disable=no-member
+        j_imp_stack = self.ij.py.to_imageplus(j_stack)  # pylint: disable=no-member
 
         res_dir = out_csv_file.parent
 
         # noinspection PyPep8Naming
+        # pylint: disable=invalid-name
         HOME = Path.home()
 
         # Settings for a PeakFit ImageJ plugin
@@ -87,12 +88,11 @@ class FijiApp:
                 'psf': 'Circular Gaussian 2D',
                 'psf_parameter_1': 1.700,
             })
-        if True:
-            peakfit_args.update({
-                'spot_filter_type': 'Difference',
-                'spot_filter2': 'Mean',
-                'smoothing2': 2.0,
-            })
+        peakfit_args.update({
+            'spot_filter_type': 'Difference',
+            'spot_filter2': 'Mean',
+            'smoothing2': 2.0,
+        })
         if not (HOME / '.gdsc.smlm' / 'fitenginesettings.settings').exists():
             peakfit_args.update({
                 # 'spot_filter_type': 'Difference',
@@ -129,15 +129,14 @@ class FijiApp:
             })
         # Overwrite result settings unconditionally
         # if not (HOME / '.gdsc.smlm' / 'resultssettings.settings').exists():
-        if True:
-            peakfit_args.update({
-                'results_format': 'Text',
-                'file_distance_unit': 'unknown (na)',
-                'file_intensity_unit': 'unknown (na)',
-                'file_angle_unit': 'unknown (na)',
-                'file_show_precision': True,
-                'results_directory': str(res_dir),
-            })
+        peakfit_args.update({
+            'results_format': 'Text',
+            'file_distance_unit': 'unknown (na)',
+            'file_intensity_unit': 'unknown (na)',
+            'file_angle_unit': 'unknown (na)',
+            'file_show_precision': True,
+            'results_directory': str(res_dir),
+        })
         # Temporary settings for development
         peakfit_args.update({
             # 'log_progress': True,
@@ -150,18 +149,18 @@ class FijiApp:
             'lut': 'Fire',
         })
 
-        was_log_window_open = self.ij.WindowManager.getWindow("Log") is not None
+        was_log_window_open = self.ij.WindowManager.getWindow("Log") is not None  # pylint: disable=no-member
 
         # Apply our configuration
-        self.ij.py.run_plugin('Fit Configuration', args=peakfit_args)
+        self.ij.py.run_plugin('Fit Configuration', args=peakfit_args)  # pylint: disable=no-member
         # Allow user to change the configuration
-        self.ij.py.run_plugin('Fit Configuration')
+        self.ij.py.run_plugin('Fit Configuration')  # pylint: disable=no-member
         # Run the plugin code on given stack
-        self.ij.py.run_plugin('Peak Fit', args=peakfit_args, imp=j_imp_stack)
+        self.ij.py.run_plugin('Peak Fit', args=peakfit_args, imp=j_imp_stack)  # pylint: disable=no-member
 
         # Close Log window if it wasn't open before Peak Fit
         if not was_log_window_open:
-            log_window = self.ij.WindowManager.getWindow("Log")
+            log_window = self.ij.WindowManager.getWindow("Log")  # pylint: disable=no-member
             if log_window is not None:
                 log_window.setVisible(False)
 

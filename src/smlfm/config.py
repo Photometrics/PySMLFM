@@ -15,6 +15,7 @@ from .micro_lens_array import MicroLensArray
 
 
 @dataclass
+# pylint: disable=too-many-instance-attributes
 class Config:
     _fiji_dir_doc: str = (
         'A path to Fiji.app folder with Fiji application.\n'
@@ -233,16 +234,16 @@ class Config:
         indent = kwargs.pop('indent', 4)  # Indent with 4 spaces by default
 
         class JSONEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if dataclasses.is_dataclass(obj):
-                    return dataclasses.asdict(obj)
-                elif isinstance(obj, PurePath):
-                    return str(obj)
-                elif isinstance(obj, Enum):
-                    return obj.name
-                elif isinstance(obj, np.ndarray):
-                    return obj.tolist()
-                return super().default(obj)
+            def default(self, o):
+                if dataclasses.is_dataclass(o):
+                    return dataclasses.asdict(o)
+                if isinstance(o, PurePath):
+                    return str(o)
+                if isinstance(o, Enum):
+                    return o.name
+                if isinstance(o, np.ndarray):
+                    return o.tolist()
+                return super().default(o)
 
         return json.dumps(self, cls=JSONEncoder,
                           indent=indent, ensure_ascii=False,
@@ -256,27 +257,27 @@ class Config:
         for field in fields(Config):
             # Override doc fields with internal documentation
             if field.name.startswith('_') and field.name.endswith('_doc'):
-                cfg.__setattr__(field.name, getattr(cfg_default, field.name))
+                setattr(cfg, field.name, getattr(cfg_default, field.name))
                 continue
 
             value = getattr(cfg, field.name)
             if repr(field.type) == repr(Optional[Path]):
                 if value is not None:
-                    cfg.__setattr__(field.name, Path(value))
+                    setattr(cfg, field.name, Path(value))
             elif repr(field.type) == repr(Optional[Tuple[float, float]]):
                 if value is not None:
-                    cfg.__setattr__(field.name, tuple(value))
+                    setattr(cfg, field.name, tuple(value))
             elif repr(field.type) == repr(npt.NDArray[float]):
-                cfg.__setattr__(field.name, np.array(value))
+                setattr(cfg, field.name, np.array(value))
             elif field.type is LocalisationFile.Format:
-                cfg.__setattr__(field.name, LocalisationFile.Format[value])
+                setattr(cfg, field.name, LocalisationFile.Format[value])
             elif field.type is Localisations.AlphaModel:
-                cfg.__setattr__(field.name, Localisations.AlphaModel[value])
+                setattr(cfg, field.name, Localisations.AlphaModel[value])
             elif field.type is MicroLensArray.LatticeType:
-                cfg.__setattr__(field.name, MicroLensArray.LatticeType[value])
+                setattr(cfg, field.name, MicroLensArray.LatticeType[value])
             elif field.type is Fitting.FitParams:
-                cfg.__setattr__(field.name, Fitting.FitParams(**value))
+                setattr(cfg, field.name, Fitting.FitParams(**value))
             elif field.type is Fitting.AberrationParams:
-                cfg.__setattr__(field.name, Fitting.AberrationParams(**value))
+                setattr(cfg, field.name, Fitting.AberrationParams(**value))
 
         return cfg

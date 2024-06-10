@@ -42,7 +42,6 @@ class IStage:
 
     def stage_ui_flash(self):
         """Flashes with a control where the user should continue, no-op by default."""
-        pass
 
     def stage_ui_updating(self, updating: bool):
         """Changes the stage UI state. If `updating` is True the UI is mostly
@@ -52,6 +51,7 @@ class IStage:
         raise NotImplementedError('Subclass must implement this')
 
 
+# pylint: disable=too-many-instance-attributes
 class AppModel:
     """A class holding application data and guards top-level logic.
 
@@ -159,14 +159,14 @@ class AppModel:
 
         self.locs_3d: Optional[npt.NDArray[float]] = None
 
-        self.graphs: Dict[GraphType, Optional[FigureWindow]] = dict()
+        self.graphs: Dict[GraphType, Optional[FigureWindow]] = {}
         for t in GraphType:
             self.graphs[t] = None
 
-        self._ui_mains: Dict[StageType, Optional[ttk.Frame]] = dict()
-        self._ui_numbers: Dict[StageType, Optional[ttk.Label]] = dict()
-        self._ui_frames: Dict[StageType, Optional[ttk.Frame]] = dict()
-        self._stages: Dict[StageType, Optional[IStage]] = dict()
+        self._ui_mains: Dict[StageType, Optional[ttk.Frame]] = {}
+        self._ui_numbers: Dict[StageType, Optional[ttk.Label]] = {}
+        self._ui_frames: Dict[StageType, Optional[ttk.Frame]] = {}
+        self._stages: Dict[StageType, Optional[IStage]] = {}
         for t in StageType:
             self._ui_numbers[t] = None
             self._ui_frames[t] = None
@@ -186,12 +186,12 @@ class AppModel:
 
     def create_gui(self, root):
         # Import here to avoid circular dependency
-        from .config_frame import ConfigFrame
-        from .optics_frame import OpticsFrame
-        from .csv_frame import CsvFrame
-        from .filter_frame import FilterFrame
-        from .correct_frame import CorrectFrame
-        from .fit_frame import FitFrame
+        from .config_frame import ConfigFrame  # pylint: disable=import-outside-toplevel
+        from .optics_frame import OpticsFrame  # pylint: disable=import-outside-toplevel
+        from .csv_frame import CsvFrame  # pylint: disable=import-outside-toplevel
+        from .filter_frame import FilterFrame  # pylint: disable=import-outside-toplevel
+        from .correct_frame import CorrectFrame  # pylint: disable=import-outside-toplevel
+        from .fit_frame import FitFrame  # pylint: disable=import-outside-toplevel
 
         self._root = root
         self._root.bind(AppModel._INVOKE_ON_GUI_EVENT, self._gui_invoke_handler)

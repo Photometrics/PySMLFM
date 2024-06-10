@@ -127,7 +127,7 @@ class Fitting:
                 locs_2d, rho_scaling, fit_params, abort_event)
 
         fitted_points = np.empty((0, 8))
-        total_fit = list()  # List of FitData
+        total_fit = []  # List of FitData
 
         frame = min_frame
         progress_next_frame = min_frame + progress_step
@@ -153,7 +153,7 @@ class Fitting:
 
                 if abort_event is not None:
                     if abort_event.is_set():
-                        return np.empty((0, 8)), list()
+                        return np.empty((0, 8)), []
 
                 fitted_points = np.row_stack((fitted_points, fitted_points_n))
                 total_fit += total_fit_n
@@ -183,7 +183,7 @@ class Fitting:
         z_calib = fit_params.z_calib
 
         fitted_points = np.empty((0, 8))
-        total_fit = list()  # List of FitData
+        total_fit = []  # List of FitData
 
         progress_next_frame = min_frame + progress_step
 
@@ -191,7 +191,7 @@ class Fitting:
 
             if abort_event is not None:
                 if abort_event.is_set():
-                    return np.empty((0, 8)), list()
+                    return np.empty((0, 8)), []
 
             if progress_func is not None:
                 if frame >= progress_next_frame or frame == max_frame:
@@ -366,7 +366,7 @@ class Fitting:
             np.column_stack((zeros, ones, alpha_v))))
         b = np.concatenate((x, y))
 
-        model, residuals, rank, s = np.linalg.lstsq(a, b, rcond=None)
+        model, residuals, rank, _s = np.linalg.lstsq(a, b, rcond=None)
         mse = np.mean(residuals) / (a.shape[0] - rank)
         covariant_matrix = mse * np.linalg.inv(np.dot(a.T, a))
         std_err = np.sqrt(np.diag(covariant_matrix))

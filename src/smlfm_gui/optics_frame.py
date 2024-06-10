@@ -18,6 +18,7 @@ from .figure_window import FigureWindow
 from .optics_cfg_dialog import OpticsCfgDialog
 
 
+# pylint: disable=too-many-ancestors
 class OpticsFrame(ttk.Frame, IStage):
 
     def __init__(self, master, model: AppModel, *args, **kwargs):

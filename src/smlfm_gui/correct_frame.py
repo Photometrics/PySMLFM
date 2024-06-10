@@ -20,6 +20,7 @@ from .correct_cfg_dialog import CorrectCfgDialog
 from .figure_window import FigureWindow
 
 
+# pylint: disable=too-many-ancestors
 class CorrectFrame(ttk.Frame, IStage):
 
     def __init__(self, master, model: AppModel, *args, **kwargs):

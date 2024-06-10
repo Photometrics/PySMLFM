@@ -53,7 +53,8 @@ class ConfigCfgDialog(CfgDialog):
         super().__init__(parent, model, title, process_cb=process_cb)
 
     # noinspection PyProtectedMember
-    def body(self, master):
+    # pylint: disable=protected-access
+    def body(self, master) -> tk.BaseWidget:
         ui_tab = ttk.Frame(master)
         row = 0
 
@@ -176,7 +177,7 @@ class ConfigCfgDialog(CfgDialog):
 
         return self._ui_fiji_dir  # Control that gets initial focus
 
-    def _on_get_fiji_dir(self):
+    def _on_get_fiji_dir(self) -> None:
         dir_name = filedialog.askdirectory(
             parent=self,
             title='Select Fiji.app folder...',
@@ -184,7 +185,7 @@ class ConfigCfgDialog(CfgDialog):
         if dir_name:
             self._var_fiji_dir.set(dir_name)
 
-    def validate(self):
+    def validate(self) -> bool:
         fiji_dir = Path(self._var_fiji_dir.get())
         if not fiji_dir.exists() or not fiji_dir.is_dir():
             self.initial_focus = self._ui_fiji_dir
@@ -197,7 +198,7 @@ class ConfigCfgDialog(CfgDialog):
 
         return super().validate()
 
-    def process(self):
+    def process(self) -> None:
         self.model.cfg.fiji_dir = Path(self._var_fiji_dir.get())
         self.model.cfg.fiji_jvm_opts = self._var_jvm_opts.get()
         self.model.cfg.show_graphs = self._var_show_graphs.get()

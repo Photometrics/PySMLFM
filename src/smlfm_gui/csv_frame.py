@@ -18,6 +18,7 @@ from .consts import COMMAND, IMAGE, READONLY, TEXT, TEXTVARIABLE, VARIABLE, Grap
 from .figure_window import FigureWindow
 
 
+# pylint: disable=too-many-ancestors,too-many-instance-attributes
 class CsvFrame(ttk.Frame, IStage):
 
     def __init__(self, master, model: AppModel, *args, **kwargs):

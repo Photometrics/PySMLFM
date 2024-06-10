@@ -66,7 +66,8 @@ class FilterCfgDialog(CfgDialog):
         super().__init__(parent, model, title, process_cb=process_cb)
 
     # noinspection PyProtectedMember, PyBroadException
-    def body(self, master):
+    # pylint: disable=protected-access
+    def body(self, master) -> tk.BaseWidget:
         ui_tab = ttk.Frame(master)
         row = 0
 
@@ -141,7 +142,7 @@ class FilterCfgDialog(CfgDialog):
             self._ui_filter_spot_sizes_max,
             text=self.model.cfg._filter_spot_sizes_doc + limits)
         self.ui_widgets.append(self._ui_filter_spot_sizes_max)
-        ui_filter_spot_sizes_unit = ttk.Label(ui_tab, text=u'\u00B5m')  # microns
+        ui_filter_spot_sizes_unit = ttk.Label(ui_tab, text='\u00B5m')  # microns
         #
         ui_filter_spot_sizes.grid(column=0, row=row, sticky=tk.EW)
         self._ui_filter_spot_sizes_min.grid(column=1, row=row, sticky=tk.EW)
@@ -205,7 +206,9 @@ class FilterCfgDialog(CfgDialog):
 
         return self._ui_filter_lenses  # Control that gets initial focus
 
-    def validate(self):
+    # pylint: disable=too-many-return-statements
+    # pylint: disable=protected-access
+    def validate(self) -> bool:
         if self._var_filter_rhos.get():
             if not self.is_float(self._var_filter_rhos_min.get()):
                 self.initial_focus = self._ui_filter_rhos_min
@@ -254,7 +257,7 @@ class FilterCfgDialog(CfgDialog):
 
         return super().validate()
 
-    def process(self):
+    def process(self) -> None:
         self.model.cfg.filter_lenses = self._var_filter_lenses.get()
 
         if self._var_filter_rhos.get():
@@ -283,7 +286,7 @@ class FilterCfgDialog(CfgDialog):
 
         super().process()
 
-    def enable(self, active: bool, change_cursor: bool = True):
+    def enable(self, active: bool, change_cursor: bool = True) -> None:
         super().enable(active, change_cursor)
 
         if active:

@@ -79,7 +79,8 @@ class CfgDialog(tk.Toplevel):
         self.ui_widgets = []
         super().destroy()
 
-    def body(self, master):
+    # pylint: disable=unused-argument
+    def body(self, master) -> tk.BaseWidget:
         """Create dialog body.
 
         Return widget that should have initial focus.
@@ -87,9 +88,9 @@ class CfgDialog(tk.Toplevel):
         by the __init__ method.
         """
 
-        pass  # Override
+        return self  # Override
 
-    def buttonbox(self, master):
+    def buttonbox(self, master) -> None:
         """Add standard button box.
 
         Override if you don't want the standard buttons.
@@ -118,7 +119,7 @@ class CfgDialog(tk.Toplevel):
         self.bind("<Return>", self.ok)
         self.bind("<Escape>", self.cancel)
 
-    def show_modal(self):
+    def show_modal(self) -> None:
         self.deiconify()  # Become visible now
         self.enable(True)
         self.initial_focus.focus_set()
@@ -128,7 +129,7 @@ class CfgDialog(tk.Toplevel):
         self.grab_set()
         self.wait_window(self)
 
-    def ok(self, _event=None):
+    def ok(self, _event=None) -> None:
         if not self.validate():
             self.initial_focus.focus_set()  # Put focus back
             return
@@ -141,7 +142,7 @@ class CfgDialog(tk.Toplevel):
         finally:
             self.cancel()
 
-    def apply(self, _event=None):
+    def apply(self, _event=None) -> None:
         self._process_cb_apply = True
         try:
             if not self.validate():
@@ -151,21 +152,21 @@ class CfgDialog(tk.Toplevel):
         finally:
             self._process_cb_apply = False
 
-    def cancel(self, _event=None):
+    def cancel(self, _event=None) -> None:
         if self.parent is not None:
             self.parent.focus_set()  # Put focus back to the parent window
         self.destroy()
 
-    def validate(self):
+    def validate(self) -> bool:
         """Validate the data.
 
         This method is called automatically to validate the data before the
         dialog is destroyed. By default, it always validates OK.
         """
 
-        return 1  # Override
+        return True  # Override
 
-    def process(self):
+    def process(self) -> None:
         """Process the data.
 
         This method is called automatically to process the data
@@ -176,9 +177,9 @@ class CfgDialog(tk.Toplevel):
         if self._process_cb is not None:
             self._process_cb(self._process_cb_apply)
 
-        pass  # Override
+        # Override
 
-    def enable(self, active: bool, change_cursor: bool = True):
+    def enable(self, active: bool, change_cursor: bool = True) -> None:
         if change_cursor:
             self.winfo_toplevel().configure(cursor='' if active else 'watch')
 
@@ -192,7 +193,7 @@ class CfgDialog(tk.Toplevel):
             w.configure(state=state)
 
     @staticmethod
-    def is_float(num):
+    def is_float(num) -> bool:
         try:
             float(num)
             return True
@@ -200,7 +201,7 @@ class CfgDialog(tk.Toplevel):
             return False
 
     @staticmethod
-    def is_int(num):
+    def is_int(num) -> bool:
         try:
             int(num)
             return True
@@ -212,8 +213,9 @@ class CfgDialog(tk.Toplevel):
         return min(max(n, min_n), max_n)
 
 
-def _setup_dialog(w):
-    # noinspection PyProtectedMember
+# noinspection PyProtectedMember
+# pylint: disable=protected-access
+def _setup_dialog(w) -> None:
     if w._windowingsystem == "aqua":
         w.tk.call("::tk::unsupported::MacWindowStyle", "style",
                   w, "moveableModal", "")

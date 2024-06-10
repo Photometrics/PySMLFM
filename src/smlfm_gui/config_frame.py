@@ -14,6 +14,7 @@ from .consts import COMMAND, IMAGE, TEXT, TEXTVARIABLE, VARIABLE, StageType
 from .config_cfg_dialog import ConfigCfgDialog
 
 
+# pylint: disable=too-many-ancestors
 class ConfigFrame(ttk.Frame, IStage):
 
     def __init__(self, master, model: AppModel, *args, **kwargs):
@@ -303,7 +304,7 @@ class ConfigFrame(ttk.Frame, IStage):
     def save(self, file_name: Path):
         try:
             cfg_dump = self._model.cfg.to_json()
-            with open(file_name, 'wt') as file:
+            with open(file_name, 'wt', encoding='utf-8') as file:
                 file.write(cfg_dump)
         except BaseException as ex:
             messagebox.showerror(
@@ -342,7 +343,7 @@ class ConfigFrame(ttk.Frame, IStage):
                 self._var_summary.set, 'Loading configuration...')
 
             if self._model.cfg_file is not None:
-                with open(self._model.cfg_file, 'rt') as file:
+                with open(self._model.cfg_file, 'rt', encoding='utf-8') as file:
                     cfg_dump = file.read()
             else:
                 cfg_dump = pkgutil.get_data(
@@ -366,7 +367,9 @@ class ConfigFrame(ttk.Frame, IStage):
             print('WARNING: Restart the application to apply new settings')
             self._model.invoke_on_gui_thread_async(
                 messagebox.showwarning,
-                kwargs=dict(
-                    title='Warning',
-                    message='Restart the application to apply new settings.',
-                    detail='Java can be started only once.'))
+                kwargs={
+                    'title': 'Warning',
+                    'message': 'Restart the application to apply new settings.',
+                    'detail': 'Java can be started only once.',
+                }
+            )

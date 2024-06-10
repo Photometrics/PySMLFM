@@ -19,6 +19,7 @@ from .figure_window import FigureWindow
 from .filter_cfg_dialog import FilterCfgDialog
 
 
+# pylint: disable=too-many-ancestors
 class FilterFrame(ttk.Frame, IStage):
 
     def __init__(self, master, model: AppModel, *args, **kwargs):
