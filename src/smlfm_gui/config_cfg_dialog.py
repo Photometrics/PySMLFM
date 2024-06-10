@@ -152,7 +152,7 @@ class ConfigCfgDialog(CfgDialog):
         row += 1
 
         max_cpu = os.cpu_count()
-        limits = (f'\n\nCPU count not detected.' if max_cpu is None else
+        limits = ('\n\nCPU count not detected.' if max_cpu is None else
                   f'\n\nDetected CPU count: {max_cpu}')
         #
         ui_max_workers_lbl = ttk.Label(ui_tab, text='Max. workers:', anchor=tk.E)

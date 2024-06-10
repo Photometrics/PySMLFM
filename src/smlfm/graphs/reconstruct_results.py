@@ -33,7 +33,7 @@ def reconstruct_results(fig1: Figure, fig2: Figure, fig3: Figure,
     elif isinstance(locs3d_data_or_file, PurePath):
         locs_3d = np.genfromtxt(locs3d_data_or_file, delimiter=',', dtype=float)
     else:
-        raise TypeError(f'Unsupported argument type with 3D localisations')
+        raise TypeError('Unsupported argument type with 3D localisations')
 
     xyz = locs_3d[:, 0:3]  # X, Y, Z
     lateral_err = locs_3d[:, 3]  # Fitting error in X and Y (in microns)

@@ -125,7 +125,7 @@ class LocalisationFile:
                                  dtype=float, skip_header=csv_header_rows)
 
         if raw_data.shape[0] <= 0:
-            raise ValueError(f'No valid data found')
+            raise ValueError('No valid data found')
         if raw_data.shape[1] < min_columns:
             raise ValueError(f'Insufficient number of columns for selected format,'
                              f'required min. {min_columns}, found {raw_data.shape[1]}')
