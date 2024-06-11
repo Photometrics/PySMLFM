@@ -6,7 +6,7 @@ try:
     import imagej
     import jpype
     import scyjava
-except ImportError(imagej):
+except ImportError:
     _HAS_IMAGEJ = False
 
 
