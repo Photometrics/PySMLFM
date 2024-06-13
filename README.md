@@ -3,6 +3,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/Photometrics/PySMLFM?include_prereleases&label=latest%20release)
 ![PyPI - Version](https://img.shields.io/pypi/v/PySMLFM)
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FPhotometrics%2FPySMLFM%2Fmain%2Fpyproject.toml)  
+[![Tests status](https://github.com/Photometrics/PySMLFM/actions/workflows/tests.yml/badge.svg)](https://github.com/Photometrics/PySMLFM/actions/workflows/tests.yml "Tests status")
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Percentage of issues still open")
 ---
