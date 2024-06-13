@@ -1,12 +1,8 @@
-import dataclasses
 import json
-from dataclasses import dataclass, fields
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from enum import Enum
 from pathlib import Path, PurePath
 from typing import Optional, Tuple
-
-import numpy as np
-import numpy.typing as npt
 
 from .fitting import Fitting
 from .localisation_file import LocalisationFile
@@ -53,13 +49,13 @@ class Config:
     _mla_centre_doc: str = (
         'An X,Y coordinates of the array center (in lattice spacing units).\n'
         'The MLA keeps the distance between lens centres equal to 1.')
-    mla_centre: npt.NDArray[float] = np.array([0.0, 0.0])
+    mla_centre: Tuple[float, float] = field(default_factory=lambda: (0.0, 0.0))
     _mla_rotation_doc: str = (
         'A rotation of the MLA to match the orientation of the data (in degrees)')
     mla_rotation: float = 30.8
     _mla_offset_doc: str = (
         'An X,Y offset of the MLA to match the orientation of the data (in microns).')
-    mla_offset: npt.NDArray[float] = np.array([0.0, 0.0])
+    mla_offset: Tuple[float, float] = field(default_factory=lambda: (0.0, 0.0))
     _focal_length_mla_doc: str = (
         'A focal length of Micro-Lens Array (in mm).')
     focal_length_mla: float = 175.0
@@ -131,16 +127,18 @@ class Config:
     _fit_params_aberration_z_calib_doc: str = (
         'A calibration factor between optical and physical Z axis.\n'
         'Unused and ignored for aberration correction.')
-    fit_params_aberration: Fitting.FitParams = Fitting.FitParams(
-        frame_min=-1,
-        frame_max=-1,
-        disparity_max=5.0,
-        disparity_step=0.1,
-        dist_search=0.5,
-        angle_tolerance=2.0,
-        threshold=1.0,
-        min_views=3,
-        z_calib=None,
+    fit_params_aberration: Fitting.FitParams = field(
+        default_factory=lambda: Fitting.FitParams(
+            frame_min=-1,
+            frame_max=-1,
+            disparity_max=5.0,
+            disparity_step=0.1,
+            dist_search=0.5,
+            angle_tolerance=2.0,
+            threshold=1.0,
+            min_views=3,
+            z_calib=None,
+        )
     )
     _aberration_params_doc: str = (
         'Parameters for aberration correction.')
@@ -150,10 +148,12 @@ class Config:
         'A min. number of photons to apply correction.')
     _aberration_params_min_views_doc: str = (
         'A min. number of views the candidate is seen to count it.')
-    aberration_params: Fitting.AberrationParams = Fitting.AberrationParams(
-        axial_window=1.0,
-        photon_threshold=1,
-        min_views=3,
+    aberration_params: Fitting.AberrationParams = field(
+        default_factory=lambda: Fitting.AberrationParams(
+            axial_window=1.0,
+            photon_threshold=1,
+            min_views=3,
+        )
     )
     _fit_params_full_doc: str = (
         'A fitting parameters for full data set, used after aberration correction.')
@@ -176,16 +176,18 @@ class Config:
         'A min. number of views the candidate is seen to count it.')
     _fit_params_full_z_calib_doc: str = (
         'A calibration factor between optical and physical Z axis.')
-    fit_params_full: Fitting.FitParams = Fitting.FitParams(
-        frame_min=-1,
-        frame_max=-1,
-        disparity_max=8.0,
-        disparity_step=0.1,
-        dist_search=0.5,
-        angle_tolerance=1.0,
-        threshold=0.3,
-        min_views=2,
-        z_calib=1.53,
+    fit_params_full: Fitting.FitParams = field(
+        default_factory=lambda: Fitting.FitParams(
+            frame_min=-1,
+            frame_max=-1,
+            disparity_max=8.0,
+            disparity_step=0.1,
+            dist_search=0.5,
+            angle_tolerance=1.0,
+            threshold=0.3,
+            min_views=2,
+            z_calib=1.53,
+        )
     )
 
     _save_dir_doc: str = (
@@ -235,14 +237,12 @@ class Config:
 
         class JSONEncoder(json.JSONEncoder):
             def default(self, o):
-                if dataclasses.is_dataclass(o):
-                    return dataclasses.asdict(o)
+                if is_dataclass(o):
+                    return asdict(o)
                 if isinstance(o, PurePath):
                     return str(o)
                 if isinstance(o, Enum):
                     return o.name
-                if isinstance(o, np.ndarray):
-                    return o.tolist()
                 return super().default(o)
 
         return json.dumps(self, cls=JSONEncoder,
@@ -254,30 +254,30 @@ class Config:
         cfg = Config(**json.loads(dump))
         cfg_default = Config()
 
-        for field in fields(Config):
+        for f in fields(Config):
             # Override doc fields with internal documentation
-            if field.name.startswith('_') and field.name.endswith('_doc'):
-                setattr(cfg, field.name, getattr(cfg_default, field.name))
+            if f.name.startswith('_') and f.name.endswith('_doc'):
+                setattr(cfg, f.name, getattr(cfg_default, f.name))
                 continue
 
-            value = getattr(cfg, field.name)
-            if repr(field.type) == repr(Optional[Path]):
+            value = getattr(cfg, f.name)
+            if repr(f.type) == repr(Optional[Path]):
                 if value is not None:
-                    setattr(cfg, field.name, Path(value))
-            elif repr(field.type) == repr(Optional[Tuple[float, float]]):
+                    setattr(cfg, f.name, Path(value))
+            elif repr(f.type) == repr(Tuple[float, float]):
+                setattr(cfg, f.name, tuple(value))
+            elif repr(f.type) == repr(Optional[Tuple[float, float]]):
                 if value is not None:
-                    setattr(cfg, field.name, tuple(value))
-            elif repr(field.type) == repr(npt.NDArray[float]):
-                setattr(cfg, field.name, np.array(value))
-            elif field.type is LocalisationFile.Format:
-                setattr(cfg, field.name, LocalisationFile.Format[value])
-            elif field.type is Localisations.AlphaModel:
-                setattr(cfg, field.name, Localisations.AlphaModel[value])
-            elif field.type is MicroLensArray.LatticeType:
-                setattr(cfg, field.name, MicroLensArray.LatticeType[value])
-            elif field.type is Fitting.FitParams:
-                setattr(cfg, field.name, Fitting.FitParams(**value))
-            elif field.type is Fitting.AberrationParams:
-                setattr(cfg, field.name, Fitting.AberrationParams(**value))
+                    setattr(cfg, f.name, tuple(value))
+            elif f.type is LocalisationFile.Format:
+                setattr(cfg, f.name, LocalisationFile.Format[value])
+            elif f.type is Localisations.AlphaModel:
+                setattr(cfg, f.name, Localisations.AlphaModel[value])
+            elif f.type is MicroLensArray.LatticeType:
+                setattr(cfg, f.name, MicroLensArray.LatticeType[value])
+            elif f.type is Fitting.FitParams:
+                setattr(cfg, f.name, Fitting.FitParams(**value))
+            elif f.type is Fitting.AberrationParams:
+                setattr(cfg, f.name, Fitting.AberrationParams(**value))
 
         return cfg

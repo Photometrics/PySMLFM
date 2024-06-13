@@ -3,8 +3,6 @@ from idlelib.tooltip import Hovertip
 from tkinter import ttk
 from typing import Callable, Optional
 
-import numpy as np
-
 import smlfm
 from .app_model import AppModel
 from .cfg_dialog import CfgDialog
@@ -389,13 +387,13 @@ class OpticsCfgDialog(CfgDialog):
             self._var_mla_type.get()]
         self.model.cfg.mla_lens_pitch = float(self._var_mla_lens_pitch.get())
         self.model.cfg.mla_optic_size = float(self._var_mla_optic_size.get())
-        self.model.cfg.mla_centre = np.array([
+        self.model.cfg.mla_centre = (  # Tuple
             float(self._var_mla_centre_x.get()),
-            float(self._var_mla_centre_y.get())])
+            float(self._var_mla_centre_y.get()))
         self.model.cfg.mla_rotation = float(self._var_mla_rotation.get())
-        self.model.cfg.mla_offset = np.array([
+        self.model.cfg.mla_offset = (  # Tuple
             float(self._var_mla_offset_x.get()),
-            float(self._var_mla_offset_y.get())])
+            float(self._var_mla_offset_y.get()))
         self.model.cfg.focal_length_mla = float(self._var_focal_length_mla.get())
         self.model.cfg.focal_length_obj_lens = (
             float(self._var_focal_length_obj_lens.get()))

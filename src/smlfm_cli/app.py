@@ -116,14 +116,14 @@ def app():
 
     mla = smlfm.MicroLensArray(
         cfg.mla_type, cfg.focal_length_mla, cfg.mla_lens_pitch,
-        cfg.mla_optic_size, cfg.mla_centre)
+        cfg.mla_optic_size, np.array(cfg.mla_centre))
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
         fig = smlfm.graphs.draw_mla(plt.figure(), mla.lens_centres, mla.centre)
         fig.canvas.manager.set_window_title('Micro-lens array centres')
 
     mla.rotate_lattice(np.deg2rad(cfg.mla_rotation))
-    mla.offset_lattice(cfg.mla_offset / lfm.mla_to_xy_scale)  # XY -> MLA
+    mla.offset_lattice(np.array(cfg.mla_offset) / lfm.mla_to_xy_scale)  # XY -> MLA
 
     if cfg.show_graphs and cfg.show_all_debug_graphs:
         fig = smlfm.graphs.draw_mla(plt.figure(), mla.lens_centres, mla.centre)

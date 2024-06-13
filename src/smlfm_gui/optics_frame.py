@@ -420,11 +420,11 @@ class OpticsFrame(ttk.Frame, IStage):
             self._model.cfg.focal_length_mla,
             self._model.cfg.mla_lens_pitch,
             self._model.cfg.mla_optic_size,
-            self._model.cfg.mla_centre)
+            np.array(self._model.cfg.mla_centre))
 
         self._model.mla.rotate_lattice(np.deg2rad(self._model.cfg.mla_rotation))
         self._model.mla.offset_lattice(
-            self._model.cfg.mla_offset / self._model.lfm.mla_to_xy_scale)  # XY -> MLA
+            np.array(self._model.cfg.mla_offset) / self._model.lfm.mla_to_xy_scale)  # XY -> MLA
 
         self._model.invoke_on_gui_thread_async(
             self._var_summary.set, 'Mapping to lenses...')
