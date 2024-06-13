@@ -3,7 +3,6 @@
 import pkgutil
 from dataclasses import fields
 
-import numpy as np
 import pytest
 
 import smlfm
@@ -31,7 +30,7 @@ def test_config(indents):
         msg = (f'{field.name} (type {field.type}): '
                f'"{cfg1_val}" (type {type(cfg1_val)}) != '
                f'"{cfg2_val}" (type {type(cfg2_val)})')
-        if np.all(cfg1_val != cfg2_val):
+        if cfg1_val != cfg2_val:
             raise ValueError(f'Value mismatch: {msg}')
-        if np.all(type(cfg1_val) is not type(cfg2_val)):
+        if type(cfg1_val) is not type(cfg2_val):
             raise TypeError(f'Type mismatch: {msg}')
