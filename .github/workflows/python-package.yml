@@ -35,8 +35,11 @@ jobs:
       - name: Update pip
         run: python -m pip install --upgrade pip
 
+      # Install scikit-build explicitly, even though tksvg has it as dependency
       - name: Install the package with dependencies
-        run: python -m pip install '.[dev]'
+        run: |
+          pip install scikit-build
+          python -m pip install '.[dev]'
 
       - name: Test with pytest
         run: |
