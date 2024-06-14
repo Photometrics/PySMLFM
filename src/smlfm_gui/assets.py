@@ -1,6 +1,7 @@
 import pkgutil
+import tkinter as tk
 
-import tksvg
+import cairosvg
 
 from . import __name__ as _pkg_name_
 
@@ -77,89 +78,92 @@ class Icons:
                                         1)
             return svg_data
 
+        def load_svg_image(svg_data: bytes, scale: float = 1.0):
+            png_data = cairosvg.svg2png(bytestring=svg_data, scale=scale)
+            return tk.PhotoImage(data=png_data)
+
         # Material icons
 
         data = pkgutil.get_data(_pkg_name_, f'data/teledyne_rhomboid{mi_suffix}')
         # Keep black or change to Teledyne Blue (#0076C0)
         # data = replace_color(data, '#0076C0')
-        self.app = tksvg.SvgImage(data=data,
-                                  scale=self.svg_scale * 32.0 / self.default_size)
+        self.app = load_svg_image(data, self.svg_scale * 32.0 / self.default_size)
 
         data = pkgutil.get_data(_pkg_name_, f'data/folder_open{mi_suffix}')
         data = replace_color(data, color_any)
-        self.open = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.open = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/save{mi_suffix}')
         data = replace_color(data, color_any)
-        self.save = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.save = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/save_as{mi_suffix}')
         data = replace_color(data, color_any)
-        self.save_as = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.save_as = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/settings{mi_suffix}')
         data = replace_color(data, color_settings)
-        self.settings = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.settings = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/play_arrow{mi_suffix}')
         data = replace_color(data, color_start)
-        self.start = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.start = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/cancel{mi_suffix}')
         data = replace_color(data, color_cancel)
-        self.cancel = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.cancel = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/done{mi_suffix}')
         data = replace_color(data, color_start)
-        self.ok = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.ok = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/visibility{mi_suffix}')
         data = replace_color(data, color_preview)
-        self.preview = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.preview = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/construction{mi_suffix}')
         data = replace_color(data, color_any)
-        self.cfg_stage = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.cfg_stage = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/scatter_plot{mi_suffix}')
         data = replace_color(data, color_any)
-        self.csv_stage = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.csv_stage = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/table_rows{mi_suffix}')
         data = replace_color(data, color_any)
-        self.csv_data = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.csv_data = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/collections{mi_suffix}')
         data = replace_color(data, color_any)
-        self.csv_stack = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.csv_stack = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/search{mi_suffix}')
         data = replace_color(data, color_any)
-        self.csv_peakfit = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.csv_peakfit = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/biotech{mi_suffix}')
         data = replace_color(data, color_any)
-        self.opt_stage = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.opt_stage = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/filter_alt{mi_suffix}')
         data = replace_color(data, color_any)
-        self.flt_stage = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.flt_stage = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/panorama_horizontal_select{mi_suffix}')
         data = replace_color(data, color_any)
-        self.cor_stage = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.cor_stage = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/mediation{mi_suffix}')
         data = replace_color(data, color_any)
-        self.fit_stage = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.fit_stage = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/bar_chart{mi_suffix}')
         data = replace_color(data, color_preview)
-        self.fit_occurrences = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.fit_occurrences = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/apps{mi_suffix}')
         data = replace_color(data, color_preview)
-        self.fit_histogram = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.fit_histogram = load_svg_image(data, self.svg_scale)
 
         # Pictogrammers icons
 
@@ -167,59 +171,59 @@ class Icons:
         data = pg_inject_missing_attrs(data)
         data = pg_crop_number_icon(data)
         data = replace_color(data, color_app)
-        self.nr1_large = tksvg.SvgImage(data=data, scale=self._svg_big_number_scale)
+        self.nr1_large = load_svg_image(data, self._svg_big_number_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/numeric-2{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = pg_crop_number_icon(data)
         data = replace_color(data, color_app)
-        self.nr2_large = tksvg.SvgImage(data=data, scale=self._svg_big_number_scale)
+        self.nr2_large = load_svg_image(data, self._svg_big_number_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/numeric-3{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = pg_crop_number_icon(data)
         data = replace_color(data, color_app)
-        self.nr3_large = tksvg.SvgImage(data=data, scale=self._svg_big_number_scale)
+        self.nr3_large = load_svg_image(data, self._svg_big_number_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/numeric-4{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = pg_crop_number_icon(data)
         data = replace_color(data, color_app)
-        self.nr4_large = tksvg.SvgImage(data=data, scale=self._svg_big_number_scale)
+        self.nr4_large = load_svg_image(data, self._svg_big_number_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/numeric-5{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = pg_crop_number_icon(data)
         data = replace_color(data, color_app)
-        self.nr5_large = tksvg.SvgImage(data=data, scale=self._svg_big_number_scale)
+        self.nr5_large = load_svg_image(data, self._svg_big_number_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/numeric-6{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = pg_crop_number_icon(data)
         data = replace_color(data, color_app)
-        self.nr6_large = tksvg.SvgImage(data=data, scale=self._svg_big_number_scale)
+        self.nr6_large = load_svg_image(data, self._svg_big_number_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/circle-small{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = replace_color(data, color_preview)
-        self.opt_dot = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.opt_dot = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/dots-hexagon{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = replace_color(data, color_preview)
-        self.opt_hexagon = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.opt_hexagon = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/dots-grid{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = replace_color(data, color_preview)
-        self.opt_square = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.opt_square = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/dots-triangle{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = replace_color(data, color_preview)
-        self.opt_triangle = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.opt_triangle = load_svg_image(data, self.svg_scale)
 
         data = pkgutil.get_data(_pkg_name_, f'data/rotate-orbit{pg_suffix}')
         data = pg_inject_missing_attrs(data)
         data = replace_color(data, color_preview)
-        self.fit_3d = tksvg.SvgImage(data=data, scale=self.svg_scale)
+        self.fit_3d = load_svg_image(data, self.svg_scale)

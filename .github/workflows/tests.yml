@@ -11,19 +11,21 @@ on:
 jobs:
   test:
     name: Run tests - ${{ matrix.os }} - ${{ matrix.python-version }}
+
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
-        # MacOS is not supported by tksvg Python package at the moment
-        os: [ubuntu-24.04, ubuntu-20.04, windows-2022]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
         exclude:
-          - os: ubuntu-24.04
+          - os: ubuntu-latest  # Python 3.8 is not supported since ubuntu-24.04
             python-version: '3.8'
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout sources
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -33,16 +35,15 @@ jobs:
 
       - name: Install Tkinter for Python on Ubuntu
         if: ${{ startsWith(matrix.os, 'ubuntu') }}
-        run: sudo apt-get install python3-tk tk-dev -y
+        # Ignore the failure here and let other steps fail,
+        # it allows 'act' to test actions locally.
+        run: sudo apt-get install python3-tk -y || true
 
       - name: Update pip
         run: python -m pip install --upgrade pip
 
-      # Install scikit-build explicitly, even though tksvg has it as dependency
       - name: Install the package with dependencies
-        run: |
-          pip install scikit-build
-          python -m pip install '.[dev]'
+        run: python -m pip install '.[dev]'
 
       - name: Test with pytest
         run: |
@@ -51,22 +52,25 @@ jobs:
 
   check:
     name: Check code quality - ${{ matrix.os }} - ${{ matrix.python-version }}
+
     runs-on: ${{ matrix.os }}
+
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        # Doesn't work in GitHub actions with Python 3.10+ due to Tkinter
+        # Doesn't work in GitHub actions with Python 3.10+ due to Tkinter.
+        # A package python3-tk must be installed via apt with newer Python.
         python-version: ['3.9']
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout sources
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          #cache: 'pip'  # Caching pip dependencies
 
       - name: Update pip
         run: python -m pip install --upgrade pip
