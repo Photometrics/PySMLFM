@@ -1,8 +1,8 @@
 # Single Molecule Light Field Microscopy Reconstruction (PySMLFM)
 
-![GitHub Release](https://img.shields.io/github/v/release/Photometrics/PySMLFM?include_prereleases&label=latest%20release)
-![PyPI - Version](https://img.shields.io/pypi/v/PySMLFM)
-![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FPhotometrics%2FPySMLFM%2Fmain%2Fpyproject.toml)  
+[![GitHub releases](https://img.shields.io/github/v/release/Photometrics/PySMLFM?include_prereleases&label=latest%20release)](https://github.com/Photometrics/PySMLFM/releases "GitHub releases")
+[![PyPI releases](https://img.shields.io/pypi/v/PySMLFM)](https://pypi.org/project/PySMLFM/ "PyPI release")
+[![Python version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FPhotometrics%2FPySMLFM%2Fmain%2Fpyproject.toml)](https://python.org "Python versions")  
 [![Tests status](https://github.com/Photometrics/PySMLFM/actions/workflows/tests.yml/badge.svg)](https://github.com/Photometrics/PySMLFM/actions/workflows/tests.yml "Tests status")
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Percentage of issues still open")
@@ -228,20 +228,20 @@ instead.
 
 ### Main Window
 
-![Main Window](/images/app-gui.png?raw=true)
+![Main Window](https://raw.githubusercontent.com/Photometrics/PySMLFM/main/images/app-gui.png)
 
 ### Optics Settings Dialog
 
-![Optics Settings Dialog](/images/config-optics.png?raw=true)
+![Optics Settings Dialog](https://raw.githubusercontent.com/Photometrics/PySMLFM/main/images/config-optics.png)
 
 ### Micro Lens Array Layout
 
-![Micro Lens Array Layout](/images/graph-mla.png?raw=true)
+![Micro Lens Array Layout](https://raw.githubusercontent.com/Photometrics/PySMLFM/main/images/graph-mla.png)
 
 ### Filtered Localisations
 
-![Filtered Localisations](/images/graph-locs-filtered.png?raw=true)
+![Filtered Localisations](https://raw.githubusercontent.com/Photometrics/PySMLFM/main/images/graph-locs-filtered.png)
 
 ### 3D Reconstruction
 
-![3D Reconstruction](/images/graph-3d.png?raw=true)
+![3D Reconstruction](https://raw.githubusercontent.com/Photometrics/PySMLFM/main/images/graph-3d.png)
