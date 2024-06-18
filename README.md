@@ -73,7 +73,7 @@ You can also `pip install pyimagej`, but will then need to install
    > ```
    > (base) C:\Users\Me> mamba create -n MyEnv -c conda-forge python=3.8 pyimagej openjdk=8 blas=*=blis
    > ```
-4. Whenever you want to use _MyEnv_ environment, activate it first:
+4. **Whenever you want to use _MyEnv_ environment, activate it first**:
    ```
    (base) C:\Users\Me> mamba activate MyEnv
    ```
@@ -88,25 +88,23 @@ You can also `pip install pyimagej`, but will then need to install
 
 ## Install PySMLFM
 
-Let's suppose you closed the prompt after initial setup.
+Install either stable release or development version as shown below.
 
-1. Get the ZIP archive with sources from GitHub (`PySMLFM-main.zip`).
-2. Run Miniforge Prompt from Start menu.
-3. Activate _MyEnv_ environment:
+### Latest Stable Release
+
+-  Install the package from Python Package Index (PyPI):
    ```
-   (base) C:\Users\Me> mamba activate MyEnv
+   (MyEnv) C:\Users\Me> pip install PySMLFM
    ```
-4. Install the package from source archive extracted e.g. in your home folder
+
+### Latest Development Version
+
+-  Get the ZIP archive with sources from GitHub (`PySMLFM-main.zip`).
+-  Install the package from source archive extracted e.g. in your home folder
    (`C:\Users\Me\PySMLFM-main`):
    ```
    (MyEnv) C:\Users\Me> cd PySMLFM-main
    (MyEnv) C:\Users\Me\PySMLFM-main> pip install .
-   ```
-   In case you did not install PyImageJ package unconditionally in step 3 of
-   Initial Setup and still want to use it, it is possible to install it as
-   optional dependency of PySMLFM package. Simply modify above install command to:
-   ```
-   (MyEnv) C:\Users\Me\PySMLFM-main> pip install .[fiji]
    ```
 
 ## Execution
@@ -117,19 +115,14 @@ helper script.
 
 ### Via Python Command
 
-1. Run Miniforge Prompt from Start menu.
-2. Activate _MyEnv_ environment:
-   ```
-   (base) C:\Users\Me> mamba activate MyEnv
-   ```
-3. Run the command line application:
-   ```
-   (MyEnv) C:\Users\Me> python -m smlfm_cli
-   ```
-   or the GUI application:
-   ```
-   (MyEnv) C:\Users\Me> python -m smlfm_gui
-   ```
+Run the command line application:
+```
+(MyEnv) C:\Users\Me> python -m smlfm_cli
+```
+or the GUI application:
+```
+(MyEnv) C:\Users\Me> python -m smlfm_gui
+```
 
 ### Via Helper Script
 
