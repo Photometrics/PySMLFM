@@ -1,10 +1,10 @@
 name: PyPi Release
 
 on:
-  #release:
-  #  types: [published]
-
-  workflow_dispatch:  # Manual trigger only
+  release:
+    types:
+    - published
+  #workflow_dispatch:  # Manual trigger
 
 jobs:
   build:
@@ -35,17 +35,13 @@ jobs:
 
   deploy:
     needs: build
-    # Only publish to PyPI on tag pushes
-    #if: startsWith(github.ref, 'refs/tags/')
 
-    name: Upload release to TestPyPI
+    name: Upload release to PyPI
     runs-on: ubuntu-latest
 
     environment:
-#      name: pypi
-#      url: https://pypi.org/p/PySMLFM
-      name: testpypi
-      url: https://test.pypi.org/p/PySMLFM
+      name: pypi
+      url: https://pypi.org/p/PySMLFM
 
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
@@ -59,6 +55,3 @@ jobs:
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          skip-existing: true
