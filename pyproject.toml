@@ -11,6 +11,7 @@ readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 classifiers = [
     "Development Status :: 4 - Beta",
+    #"Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: MacOS :: MacOS X",
@@ -37,15 +38,22 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest ~= 6.0",
+    "pytest >= 6.0",
+    "validate-pyproject[all]",
+    "Flake8-pyproject",
+    "flake8-typing-imports",
+    "pylint",
 ]
 fiji = [
     "pyimagej ~= 1.4",
 ]
 
 [project.urls]
-# This doesn't show up with 'pip show', used a workaround via setup.cfg
+# Home page doesn't show up with 'pip show', used a workaround via setup.cfg
 homepage = "https://github.com/Photometrics/PySMLFM"
+source = "https://github.com/Photometrics/PySMLFM"
+download = "https://pypi.org/project/PySMLFM/"
+tracker = "https://github.com/Photometrics/PySMLFM/issues"
 
 [project.scripts]
 smlfm-cli = "smlfm_cli.app:app"
@@ -79,3 +87,25 @@ addopts = ""
 testpaths = [
     "tests",
 ]
+
+# Thanks to Flake8-pyproject, we can configure flake8 here
+[tool.flake8]
+max-line-length = 100
+#max-complexity = 7
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "fixme",
+    "cyclic-import",
+    "duplicate-code",
+    "missing-docstring",
+    "broad-exception-caught",
+    "too-few-public-methods",
+]
+[tool.pylint."FORMAT"]
+max-args=10
+max-attributes=30
+max-branches=30
+max-line-length=100
+max-locals=50
+max-statements=100
