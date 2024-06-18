@@ -8,6 +8,7 @@ on:
     types:
       - prereleased
       - published
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   test-build:
