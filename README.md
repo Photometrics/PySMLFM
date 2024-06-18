@@ -1,9 +1,11 @@
 # Single Molecule Light Field Microscopy Reconstruction (PySMLFM)
 
-[![GitHub releases](https://img.shields.io/github/v/release/Photometrics/PySMLFM?include_prereleases&label=latest%20release)](https://github.com/Photometrics/PySMLFM/releases "GitHub releases")
-[![PyPI releases](https://img.shields.io/pypi/v/PySMLFM)](https://pypi.org/project/PySMLFM/ "PyPI release")
-[![Python version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FPhotometrics%2FPySMLFM%2Fmain%2Fpyproject.toml)](https://python.org "Python versions")  
+[![GitHub release](https://img.shields.io/github/v/release/Photometrics/PySMLFM?label=GitHub%20stable&color=green)](https://github.com/Photometrics/PySMLFM/releases "GitHub stable release")
+[![GitHub release](https://img.shields.io/github/v/release/Photometrics/PySMLFM?include_prereleases&label=GitHub%20latest)](https://github.com/Photometrics/PySMLFM/releases "GitHub latest release")  
+[![PyPI release](https://img.shields.io/pypi/v/PySMLFM?label=PyPI&&color=green)](https://pypi.org/project/PySMLFM/ "PyPI release")
+[![TestPyPI release](https://img.shields.io/pypi/v/PySMLFM?pypiBaseUrl=https%3A%2F%2Ftest.pypi.org&label=TestPyPI)](https://test.pypi.org/project/PySMLFM/ "TestPyPI release")  
 [![Tests status](https://github.com/Photometrics/PySMLFM/actions/workflows/tests.yml/badge.svg)](https://github.com/Photometrics/PySMLFM/actions/workflows/tests.yml "Tests status")
+[![Python version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2FPhotometrics%2FPySMLFM%2Fmain%2Fpyproject.toml)](https://python.org "Python versions")  
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/Photometrics/PySMLFM.svg)](http://isitmaintained.com/project/Photometrics/PySMLFM "Percentage of issues still open")
 ---
