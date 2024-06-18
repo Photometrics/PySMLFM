@@ -1,6 +1,6 @@
 [project]
 name = "PySMLFM"
-version = "1.0.0-beta"
+version = "1.0.0"
 description = "Single Molecule Light Field Microscopy Reconstruction"
 authors = [
     {name = "Teledyne Photometrics"},
@@ -10,8 +10,7 @@ keywords = ["microscopy", "lightfield"]
 readme = "README.md"
 license = {text = "GPL-3.0-or-later"}
 classifiers = [
-    "Development Status :: 4 - Beta",
-    #"Development Status :: 5 - Production/Stable",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
     "Operating System :: MacOS :: MacOS X",
