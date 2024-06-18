@@ -3,7 +3,7 @@ name: PyPi Release
 on:
   release:
     types:
-    - published
+    - released
   #workflow_dispatch:  # Manual trigger
 
 jobs:
